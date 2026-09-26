@@ -12,7 +12,10 @@ import {
   ResearchStudy,
   AuditLogEntry,
   WebsiteSettings,
-  UserRole
+  UserRole,
+  PartnerPayout,
+  AdminBulletin,
+  PayoutMethod
 } from '../types/practice';
 
 const STORAGE_PREFIX = 'medastrology_';
@@ -67,7 +70,10 @@ export const INITIAL_USERS: UserProfile[] = [
     activeStatus: 'active',
     consentGiven: true,
     consentDate: '2026-01-15',
-    consentVersion: 'v2.4'
+    consentVersion: 'v2.4',
+    payoutMethodPreference: 'wise',
+    payoutAccountDetails: 'dr.croft@practice.org (Wise Business / Multicurrency)',
+    workCapacity: '10 sessions / week'
   },
   {
     id: 'user-affiliate-2',
@@ -82,7 +88,10 @@ export const INITIAL_USERS: UserProfile[] = [
     activeStatus: 'active',
     consentGiven: true,
     consentDate: '2026-02-01',
-    consentVersion: 'v2.4'
+    consentVersion: 'v2.4',
+    payoutMethodPreference: 'bank_wire',
+    payoutAccountDetails: 'UBS Switzerland · IBAN CH93 0024 0240 1234 5678 9 (BIC: UBSWCHZH)',
+    workCapacity: '8 sessions / week'
   },
   {
     id: 'user-client-1',
@@ -649,6 +658,77 @@ export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
   }
 ];
 
+// Initial Practice Bulletins (Admin Broadcasts to Practitioners)
+export const INITIAL_BULLETINS: AdminBulletin[] = [
+  {
+    id: 'bulletin-1',
+    title: 'Mandatory Non-Medical Disclaimer & 6th/8th Bhava Ethical Protocol',
+    content:
+      'All affiliated practitioners are reminded that planetary signatures (especially 6th/8th house indicators and Mars/Saturn transits) must be articulated exclusively through the lens of vitality rhythms, constitutional temperament, and spiritual reflection. Never discuss medical diagnoses, prescriptions, or clinical prognoses.',
+    priority: 'urgent',
+    targetAffiliateId: 'all',
+    authorName: 'Eleanor Vance, M.A. (Director)',
+    createdAt: '2026-09-24T09:30:00Z',
+    acknowledgedBy: ['user-affiliate-1']
+  },
+  {
+    id: 'bulletin-2',
+    title: 'Autumn Consultation Schedule & Room Link Upgrades',
+    content:
+      'Private sanctuary consultation rooms have been migrated to encrypted end-to-end WebRTC channels. Please ensure client audio links are shared 15 minutes before scheduled appointments.',
+    priority: 'scheduling',
+    targetAffiliateId: 'all',
+    authorName: 'Eleanor Vance, M.A. (Director)',
+    createdAt: '2026-09-22T14:15:00Z',
+    acknowledgedBy: ['user-affiliate-1', 'user-affiliate-2']
+  },
+  {
+    id: 'bulletin-3',
+    title: 'Cycle 18 Honoraria Disbursed via Bank Wire & Wise',
+    content:
+      'Bi-monthly partner disbursements for completed consultations have been settled. Review the Payout Ledger in your Affiliate Desk for reference IDs and fee statements.',
+    priority: 'payout',
+    targetAffiliateId: 'all',
+    authorName: 'Eleanor Vance, M.A. (Director)',
+    createdAt: '2026-09-18T16:00:00Z',
+    acknowledgedBy: ['user-affiliate-1', 'user-affiliate-2']
+  }
+];
+
+// Initial Partner Payouts Ledger
+export const INITIAL_PAYOUTS: PartnerPayout[] = [
+  {
+    id: 'payout-101',
+    affiliateId: 'user-affiliate-1',
+    affiliateName: 'Dr. Julian Croft',
+    affiliateEmail: 'dr.croft@practice.org',
+    amount: 650,
+    currency: 'USD',
+    method: 'wise',
+    methodDetails: 'dr.croft@practice.org (Wise Business Multi-Currency)',
+    referenceId: 'WISE-BATCH-2026-9812',
+    status: 'completed',
+    notes: 'Disbursement for August & September completed M+A+C consultations & chart folios.',
+    createdAt: '2026-09-18T16:15:00Z',
+    processedBy: 'Eleanor Vance, M.A.'
+  },
+  {
+    id: 'payout-102',
+    affiliateId: 'user-affiliate-2',
+    affiliateName: 'Seraphina Lin',
+    affiliateEmail: 'seraphina.lin@practice.org',
+    amount: 420,
+    currency: 'USD',
+    method: 'bank_wire',
+    methodDetails: 'UBS Switzerland · IBAN CH93 0024 0240 1234 5678 9 (BIC: UBSWCHZH)',
+    referenceId: 'WIRE-SEPA-887410',
+    status: 'completed',
+    notes: 'Disbursement for August Cartomancy consultations and archetypal spreads.',
+    createdAt: '2026-09-18T16:20:00Z',
+    processedBy: 'Eleanor Vance, M.A.'
+  }
+];
+
 // State Store Helper
 export class PracticeStore {
   private static load<T>(key: string, defaultVal: T): T {
@@ -790,6 +870,356 @@ export class PracticeStore {
     };
     logs.unshift(newLog);
     this.save('audit_logs', logs.slice(0, 150));
+  }
+
+  // Bulletins & Practice Announcements (Live Sync to Practitioners)
+  static getBulletins(): AdminBulletin[] {
+    return this.load('bulletins', INITIAL_BULLETINS);
+  }
+
+  static saveBulletins(bulletins: AdminBulletin[]): void {
+    this.save('bulletins', bulletins);
+    this.notifySync('BULLETINS_UPDATED', bulletins);
+  }
+
+  static addBulletin(bulletin: Omit<AdminBulletin, 'id' | 'createdAt' | 'acknowledgedBy'>): AdminBulletin {
+    const bulletins = this.getBulletins();
+    const newBulletin: AdminBulletin = {
+      ...bulletin,
+      id: `bulletin-${Date.now().toString(36)}`,
+      createdAt: new Date().toISOString(),
+      acknowledgedBy: []
+    };
+    const updated = [newBulletin, ...bulletins];
+    this.save('bulletins', updated);
+    this.logAction(
+      'user-admin-1',
+      'Eleanor Vance',
+      'admin',
+      'BULLETIN_PUBLISHED',
+      `Published broadcast announcement: "${newBulletin.title}"`
+    );
+    this.notifySync('BULLETIN_ADDED', newBulletin);
+    return newBulletin;
+  }
+
+  static acknowledgeBulletin(bulletinId: string, affiliateId: string): void {
+    const bulletins = this.getBulletins();
+    const updated = bulletins.map((b) => {
+      if (b.id === bulletinId && !b.acknowledgedBy.includes(affiliateId)) {
+        return { ...b, acknowledgedBy: [...b.acknowledgedBy, affiliateId] };
+      }
+      return b;
+    });
+    this.save('bulletins', updated);
+    this.notifySync('BULLETIN_ACKNOWLEDGED', { bulletinId, affiliateId });
+  }
+
+  // Partner Payouts & Honoraria Ledger
+  static getPayouts(): PartnerPayout[] {
+    return this.load('payouts', INITIAL_PAYOUTS);
+  }
+
+  static savePayouts(payouts: PartnerPayout[]): void {
+    this.save('payouts', payouts);
+    this.notifySync('PAYOUTS_UPDATED', payouts);
+  }
+
+  static sendPayout(payoutData: Omit<PartnerPayout, 'id' | 'createdAt' | 'status'>): PartnerPayout {
+    const payouts = this.getPayouts();
+    const newPayout: PartnerPayout = {
+      ...payoutData,
+      id: `payout-${Date.now().toString(36)}`,
+      createdAt: new Date().toISOString(),
+      status: 'completed'
+    };
+    const updated = [newPayout, ...payouts];
+    this.save('payouts', updated);
+
+    // Automatically post a notification bulletin to the affiliate
+    this.addBulletin({
+      title: `Honoraria Disbursed: $${newPayout.amount.toLocaleString()} USD`,
+      content: `Disbursement of $${newPayout.amount} USD via ${newPayout.method.replace('_', ' ').toUpperCase()} (Ref: ${newPayout.referenceId}) has been successfully processed for ${newPayout.affiliateName}.`,
+      priority: 'payout',
+      targetAffiliateId: newPayout.affiliateId,
+      authorName: 'Eleanor Vance, M.A. (Director)'
+    });
+
+    this.logAction(
+      'user-admin-1',
+      'Eleanor Vance',
+      'admin',
+      'PAYOUT_DISBURSED',
+      `Sent $${newPayout.amount} USD to ${newPayout.affiliateName} via ${newPayout.method} (Ref: ${newPayout.referenceId}).`
+    );
+    this.notifySync('PAYOUT_SENT', newPayout);
+    return newPayout;
+  }
+
+  // Affiliate Partner Management (Add, Update, Remove / Reassign)
+  static addAffiliate(
+    data: Omit<UserProfile, 'id' | 'role' | 'consentGiven'>
+  ): UserProfile {
+    const users = this.getUsers();
+    const id = `user-affiliate-${Date.now().toString(36)}`;
+    const newAffiliate: UserProfile = {
+      ...data,
+      id,
+      role: 'affiliate',
+      consentGiven: true,
+      consentDate: new Date().toISOString().split('T')[0],
+      consentVersion: 'v2.4',
+      activeStatus: data.activeStatus || 'active',
+      commissionRate: data.commissionRate ?? 0.25,
+      payoutMethodPreference: data.payoutMethodPreference || 'wise',
+      payoutAccountDetails: data.payoutAccountDetails || ''
+    };
+
+    const updated = [...users, newAffiliate];
+    this.saveUsers(updated);
+
+    this.logAction(
+      'user-admin-1',
+      'Eleanor Vance',
+      'admin',
+      'AFFILIATE_ADDED',
+      `Added new practitioner partner: ${newAffiliate.name} (${newAffiliate.specialty}).`
+    );
+
+    // Sync notification bulletin
+    this.addBulletin({
+      title: `Welcome New Partner: ${newAffiliate.name}`,
+      content: `${newAffiliate.name} has joined the practice cohort specializing in ${newAffiliate.specialty}. Roster assignments and consultation rooms are now open.`,
+      priority: 'general',
+      targetAffiliateId: 'all',
+      authorName: 'Eleanor Vance, M.A. (Director)'
+    });
+
+    this.notifySync('AFFILIATE_ADDED', newAffiliate);
+    return newAffiliate;
+  }
+
+  static updateAffiliate(
+    affiliateId: string,
+    updates: Partial<UserProfile>
+  ): UserProfile | null {
+    const users = this.getUsers();
+    let updatedProfile: UserProfile | null = null;
+    const updated = users.map((u) => {
+      if (u.id === affiliateId) {
+        updatedProfile = { ...u, ...updates };
+        return updatedProfile;
+      }
+      return u;
+    });
+
+    if (updatedProfile) {
+      this.saveUsers(updated);
+      this.logAction(
+        'user-admin-1',
+        'Eleanor Vance',
+        'admin',
+        'AFFILIATE_STATUS_CHANGED',
+        `Updated profile details for partner ${affiliateId}.`
+      );
+      this.notifySync('AFFILIATE_UPDATED', updatedProfile);
+    }
+    return updatedProfile;
+  }
+
+  static removeAffiliate(
+    affiliateId: string,
+    reassignToAffiliateId?: string
+  ): { success: boolean; reassignedCount: number } {
+    const users = this.getUsers();
+    const bookings = this.getBookings();
+    const affiliateToRemove = users.find((u) => u.id === affiliateId);
+    if (!affiliateToRemove) return { success: false, reassignedCount: 0 };
+
+    let reassignedCount = 0;
+    const targetAffiliate = users.find((u) => u.id === reassignToAffiliateId);
+
+    // 1. Reassign clients
+    const updatedUsers = users
+      .map((u) => {
+        if (u.role === 'client' && u.assignedAffiliateId === affiliateId) {
+          reassignedCount++;
+          return {
+            ...u,
+            assignedAffiliateId: targetAffiliate ? targetAffiliate.id : undefined
+          };
+        }
+        return u;
+      })
+      .filter((u) => u.id !== affiliateId); // Remove partner from user list
+
+    // 2. Reassign future bookings if needed
+    const updatedBookings = bookings.map((b) => {
+      if (b.affiliateId === affiliateId) {
+        if (targetAffiliate) {
+          return {
+            ...b,
+            affiliateId: targetAffiliate.id,
+            affiliateName: targetAffiliate.name
+          };
+        }
+      }
+      return b;
+    });
+
+    this.saveUsers(updatedUsers);
+    this.saveBookings(updatedBookings);
+
+    this.logAction(
+      'user-admin-1',
+      'Eleanor Vance',
+      'admin',
+      'AFFILIATE_REMOVED',
+      `Removed partner ${affiliateToRemove.name}. ${reassignedCount} clients ${targetAffiliate ? `reassigned to ${targetAffiliate.name}` : 'set to unassigned'}.`
+    );
+
+    this.addBulletin({
+      title: `Practice Roster Update`,
+      content: `${affiliateToRemove.name} has departed from active practice. Active client consultations have been ${targetAffiliate ? `reallocated to ${targetAffiliate.name}` : 'routed to the sanctuary executive queue'}.`,
+      priority: 'scheduling',
+      targetAffiliateId: 'all',
+      authorName: 'Eleanor Vance, M.A. (Director)'
+    });
+
+    this.notifySync('AFFILIATE_REMOVED', { affiliateId, reassignToAffiliateId });
+    return { success: true, reassignedCount };
+  }
+
+  // Workload, Works Pending vs Done Tracker
+  static getAffiliateWorkloadSummary() {
+    const users = this.getUsers();
+    const bookings = this.getBookings();
+    const summaries = this.getSummaries();
+    const payouts = this.getPayouts();
+    const messages = this.getMessages();
+
+    const affiliates = users.filter((u) => u.role === 'affiliate');
+
+    const affiliateMetrics = affiliates.map((aff) => {
+      const assignedClients = users.filter(
+        (u) => u.role === 'client' && u.assignedAffiliateId === aff.id
+      );
+
+      const affBookings = bookings.filter((b) => b.affiliateId === aff.id);
+      const pendingSessions = affBookings.filter((b) => b.status === 'confirmed');
+      const completedSessions = affBookings.filter((b) => b.status === 'completed');
+      const cancelledSessions = affBookings.filter((b) => b.status === 'cancelled');
+
+      // Check summaries delivered vs pending
+      const deliveredSummaries = affBookings.filter((b) => b.hasSummaryShared);
+      const pendingSummaries = completedSessions.filter((b) => !b.hasSummaryShared);
+
+      // Unread messages from clients
+      const unreadMessages = messages.filter(
+        (m) => m.recipientId === aff.id && !m.isRead
+      );
+
+      // Pending works: sessions to conduct + summaries to draft/share + unread client inquiries
+      const pendingWorksCount =
+        pendingSessions.length + pendingSummaries.length + unreadMessages.length;
+
+      // Completed works: completed sessions + delivered summaries
+      const completedWorksCount =
+        completedSessions.length + deliveredSummaries.length;
+
+      const totalWorksCount = pendingWorksCount + completedWorksCount;
+      const completionRate =
+        totalWorksCount > 0
+          ? Math.round((completedWorksCount / totalWorksCount) * 100)
+          : 100;
+
+      // Financials
+      const grossRevenue = completedSessions.reduce((sum, b) => sum + b.amount, 0);
+      const rate = aff.commissionRate ?? 0.25;
+      const earnedCommission = Math.round(grossRevenue * rate);
+
+      const paidOut = payouts
+        .filter((p) => p.affiliateId === aff.id && p.status === 'completed')
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      const pendingPayout = Math.max(0, earnedCommission - paidOut);
+
+      return {
+        affiliate: aff,
+        assignedClientsCount: assignedClients.length,
+        assignedClients,
+        bookingsCount: affBookings.length,
+        pendingSessions,
+        completedSessions,
+        cancelledSessions,
+        pendingSummaries,
+        deliveredSummaries,
+        unreadMessages,
+        pendingWorksCount,
+        completedWorksCount,
+        totalWorksCount,
+        completionRate,
+        grossRevenue,
+        earnedCommission,
+        paidOut,
+        pendingPayout
+      };
+    });
+
+    const totalPendingWorks = affiliateMetrics.reduce(
+      (sum, m) => sum + m.pendingWorksCount,
+      0
+    );
+    const totalCompletedWorks = affiliateMetrics.reduce(
+      (sum, m) => sum + m.completedWorksCount,
+      0
+    );
+    const totalAllWorks = totalPendingWorks + totalCompletedWorks;
+    const globalCompletionRate =
+      totalAllWorks > 0
+        ? Math.round((totalCompletedWorks / totalAllWorks) * 100)
+        : 100;
+
+    const totalPendingPayouts = affiliateMetrics.reduce(
+      (sum, m) => sum + m.pendingPayout,
+      0
+    );
+    const totalPaidOut = affiliateMetrics.reduce((sum, m) => sum + m.paidOut, 0);
+
+    return {
+      affiliateMetrics,
+      totalPendingWorks,
+      totalCompletedWorks,
+      totalAllWorks,
+      globalCompletionRate,
+      totalPendingPayouts,
+      totalPaidOut
+    };
+  }
+
+  // Cross-Applet Real-Time Event Sync Dispatcher
+  static notifySync(type: string, payload?: any): void {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('medastrology_sync', {
+          detail: { type, payload, timestamp: Date.now() }
+        })
+      );
+    }
+  }
+
+  static subscribe(
+    listener: (event: { type: string; payload?: any; timestamp: number }) => void
+  ): () => void {
+    if (typeof window === 'undefined') return () => {};
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      listener(customEvent.detail);
+    };
+    window.addEventListener('medastrology_sync', handler);
+    return () => {
+      window.removeEventListener('medastrology_sync', handler);
+    };
   }
 
   // Active Session Role Tracking

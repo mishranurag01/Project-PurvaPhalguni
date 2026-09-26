@@ -1,5 +1,37 @@
 export type UserRole = 'public' | 'client' | 'affiliate' | 'admin';
 
+export type PayoutMethod = 'bank_wire' | 'wise' | 'stripe' | 'paypal' | 'crypto' | 'check';
+
+export interface PartnerPayout {
+  id: string;
+  affiliateId: string;
+  affiliateName: string;
+  affiliateEmail?: string;
+  amount: number;
+  currency: string;
+  method: PayoutMethod;
+  methodDetails: string;
+  referenceId: string;
+  status: 'completed' | 'processing';
+  notes?: string;
+  createdAt: string;
+  processedBy: string;
+}
+
+export type BulletinPriority = 'urgent' | 'protocol' | 'scheduling' | 'payout' | 'general';
+
+export interface AdminBulletin {
+  id: string;
+  title: string;
+  content: string;
+  priority: BulletinPriority;
+  targetAffiliateId: 'all' | string; // 'all' or specific affiliate id
+  authorName: string;
+  createdAt: string;
+  acknowledgedBy: string[]; // affiliate ids
+  actionLink?: string;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -27,6 +59,9 @@ export interface UserProfile {
   specialty?: string;
   bio?: string;
   activeStatus?: 'active' | 'pending' | 'suspended';
+  payoutMethodPreference?: PayoutMethod;
+  payoutAccountDetails?: string;
+  workCapacity?: string;
 }
 
 export interface ServicePlan {
@@ -185,7 +220,22 @@ export interface AuditLogEntry {
   actorId: string;
   actorName: string;
   actorRole: UserRole;
-  action: 'LOGIN' | 'VIEW_CLIENT_PROFILE' | 'GENERATE_JHORA_CHART' | 'CLIENT_ASSIGNED' | 'PRACTITIONER_NOTE_EDIT' | 'SUMMARY_SHARED' | 'CONSENT_WITHDRAWN' | 'DATA_EXPORT' | 'SETTINGS_CHANGED' | 'REVIEW_APPROVED';
+  action:
+    | 'LOGIN'
+    | 'VIEW_CLIENT_PROFILE'
+    | 'GENERATE_JHORA_CHART'
+    | 'CLIENT_ASSIGNED'
+    | 'PRACTITIONER_NOTE_EDIT'
+    | 'SUMMARY_SHARED'
+    | 'CONSENT_WITHDRAWN'
+    | 'DATA_EXPORT'
+    | 'SETTINGS_CHANGED'
+    | 'REVIEW_APPROVED'
+    | 'AFFILIATE_ADDED'
+    | 'AFFILIATE_REMOVED'
+    | 'AFFILIATE_STATUS_CHANGED'
+    | 'PAYOUT_DISBURSED'
+    | 'BULLETIN_PUBLISHED';
   details: string;
   ipAddress: string;
   isSensitive: boolean;

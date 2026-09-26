@@ -5,7 +5,9 @@ import {
   ReadingSummary,
   PractitionerNote,
   DirectMessage,
-  WebsiteSettings
+  WebsiteSettings,
+  AdminBulletin,
+  PartnerPayout
 } from '../../types/practice';
 import { PracticeStore } from '../../services/store';
 import { JHoraService, JHoraServiceResponse } from '../../services/jhoraService';
@@ -30,7 +32,12 @@ import {
   Clock,
   Eye,
   LogOut,
-  HeartPulse
+  HeartPulse,
+  Radio,
+  Bell,
+  CreditCard,
+  ArrowUpRight,
+  BarChart3
 } from 'lucide-react';
 import { soundSynth } from '../../utils/soundAmbience';
 
@@ -60,6 +67,11 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
   const [activeChatClient, setActiveChatClient] = useState<UserProfile | null>(null);
   const [chatInput, setChatInput] = useState('');
 
+  // Live Admin Bulletins & Partner Payouts
+  const [bulletins, setBulletins] = useState<AdminBulletin[]>([]);
+  const [payouts, setPayouts] = useState<PartnerPayout[]>([]);
+  const [ackToast, setAckToast] = useState<string | null>(null);
+
   // JHora Chart State for Selected Client
   const [chartCalculation, setChartCalculation] = useState<JHoraServiceResponse | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -77,7 +89,7 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
   const [summaryShared, setSummaryShared] = useState(false);
   const [summarySavedMsg, setSummarySavedMsg] = useState(false);
 
-  useEffect(() => {
+  const loadAffiliateData = () => {
     // Strictly load ONLY clients assigned to this affiliate
     const allUsers = PracticeStore.getUsers();
     const myClients = allUsers.filter(
@@ -97,7 +109,59 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
       (m) => m.senderId === affiliate.id || m.recipientId === affiliate.id
     );
     setMessages(myMsgs);
+
+    // Practice Bulletins targeted to all or this affiliate
+    const allBulletins = PracticeStore.getBulletins().filter(
+      (b) => b.targetAffiliateId === 'all' || b.targetAffiliateId === affiliate.id
+    );
+    setBulletins(allBulletins);
+
+    // Disbursed Payouts
+    const myPayouts = PracticeStore.getPayouts().filter((p) => p.affiliateId === affiliate.id);
+    setPayouts(myPayouts);
+  };
+
+  useEffect(() => {
+    loadAffiliateData();
+
+    // Live subscription to Admin changes, broadcasts, client reassignments & payouts
+    const unsubscribe = PracticeStore.subscribe((event) => {
+      loadAffiliateData();
+      if (event.type === 'BULLETIN_ADDED' || event.type === 'PAYOUT_SENT') {
+        soundSynth.playCelestialChime();
+      }
+    });
+
+    return () => unsubscribe();
   }, [affiliate.id]);
+
+  const handleAcknowledgeBulletin = (bulletinId: string) => {
+    soundSynth.playSoftTap();
+    PracticeStore.acknowledgeBulletin(bulletinId, affiliate.id);
+    loadAffiliateData();
+    setAckToast('Bulletin marked as acknowledged and synced with Admin.');
+    setTimeout(() => setAckToast(null), 3000);
+  };
+
+  // Dynamic Workload & Financial Calculations
+  const completedConsultations = bookings.filter((b) => b.status === 'completed');
+  const earnedHonoraria = Math.round(
+    completedConsultations.reduce((sum, b) => sum + b.amount, 0) * (affiliate.commissionRate || 0.25)
+  );
+  const totalPaidOut = payouts.reduce((sum, p) => sum + p.amount, 0);
+  const pendingPayout = Math.max(0, earnedHonoraria - totalPaidOut);
+
+  const pendingSessions = bookings.filter((b) => b.status === 'confirmed');
+  const pendingSummaries = bookings.filter((b) => b.status === 'completed' && !b.hasSummaryShared);
+  const deliveredSummaries = bookings.filter((b) => b.hasSummaryShared);
+  const unreadClientMsgs = messages.filter((m) => !m.isRead && m.senderRole === 'client');
+
+  const pendingWorksCount = pendingSessions.length + pendingSummaries.length + unreadClientMsgs.length;
+  const completedWorksCount = completedConsultations.length + deliveredSummaries.length;
+  const totalWorksCount = pendingWorksCount + completedWorksCount;
+  const completionRate = totalWorksCount > 0 ? Math.round((completedWorksCount / totalWorksCount) * 100) : 100;
+
+  const unacknowledgedBulletins = bulletins.filter((b) => !b.acknowledgedBy.includes(affiliate.id));
 
   // Load client-specific data when selectedClient changes
   useEffect(() => {
@@ -256,7 +320,7 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
   return (
     <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Top Banner */}
-      <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#C59B4B]" />
@@ -274,7 +338,7 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
 
         <div className="flex items-center gap-3">
           <div className="bg-[#FAF8F5] border border-[#E8E2D8] px-3 py-1.5 rounded-lg text-xs font-mono text-[#0F172A]">
-            Commission Rate: {((affiliate.commissionRate || 0.2) * 100).toFixed(0)}%
+            Commission Rate: {((affiliate.commissionRate || 0.25) * 100).toFixed(0)}%
           </div>
           <button
             onClick={onExitPortal}
@@ -285,6 +349,42 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Unacknowledged Bulletin Alert Banner from Admin */}
+      {unacknowledgedBulletins.length > 0 && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-in fade-in">
+          <div className="flex items-start gap-2.5">
+            <Radio className="w-4 h-4 text-amber-700 shrink-0 mt-0.5 animate-pulse" />
+            <div>
+              <div className="font-bold text-amber-900 flex items-center gap-2">
+                <span>Synchronized Practice Update from Director</span>
+                <span className="px-1.5 py-0.5 rounded bg-amber-200 text-amber-900 text-[10px] font-bold uppercase">
+                  {unacknowledgedBulletins[0].priority}
+                </span>
+              </div>
+              <div className="text-amber-800 font-semibold mt-0.5">{unacknowledgedBulletins[0].title}</div>
+              <p className="text-amber-700 text-[11px] mt-0.5 line-clamp-2">
+                {unacknowledgedBulletins[0].content}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleAcknowledgeBulletin(unacknowledgedBulletins[0].id)}
+            className="px-3.5 py-2 rounded-xl bg-amber-800 text-white font-semibold hover:bg-amber-900 transition-colors shrink-0 text-xs flex items-center gap-1.5 shadow-xs"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Acknowledge Update</span>
+          </button>
+        </div>
+      )}
+
+      {/* Acknowledgment Confirmation Toast */}
+      {ackToast && (
+        <div className="mb-6 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <span>{ackToast}</span>
+        </div>
+      )}
 
       {/* Main Grid: Sidebar + Tabs */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -356,6 +456,151 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
           {/* TAB 1: DASHBOARD */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
+              {/* Workload Progression & Tasks Checklist Card */}
+              <div className="p-6 bg-white rounded-3xl border border-[#E8E2D8] shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E2D8]">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-widest text-[#C59B4B] font-bold">
+                      Practitioner Caseload Tracker
+                    </span>
+                    <h3 className="text-lg font-serif font-bold text-[#0F172A]">
+                      My Workload Progression (Pending vs Done)
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold font-mono">
+                      {completionRate}% Completed
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3.5 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8]">
+                    <div className="flex items-center justify-between text-[#78716C]">
+                      <span>Pending Works</span>
+                      <Clock className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div className="text-2xl font-serif font-bold text-amber-800 mt-1">
+                      {pendingWorksCount}
+                    </div>
+                    <div className="text-[11px] text-[#78716C] mt-0.5">
+                      {pendingSessions.length} sessions, {pendingSummaries.length} summaries, {unreadClientMsgs.length} msgs
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8]">
+                    <div className="flex items-center justify-between text-[#78716C]">
+                      <span>Completed Works</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                    </div>
+                    <div className="text-2xl font-serif font-bold text-emerald-800 mt-1">
+                      {completedWorksCount}
+                    </div>
+                    <div className="text-[11px] text-[#78716C] mt-0.5">
+                      {completedConsultations.length} conducted, {deliveredSummaries.length} delivered
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8]">
+                    <div className="flex items-center justify-between text-[#78716C]">
+                      <span>Unpaid Balance Due</span>
+                      <DollarSign className="w-4 h-4 text-[#A87F32]" />
+                    </div>
+                    <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1 font-mono">
+                      ${pendingPayout.toLocaleString()} USD
+                    </div>
+                    <div className="text-[11px] text-[#78716C] mt-0.5">
+                      Total earned: ${earnedHonoraria} USD
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visual Progress Bar */}
+                <div>
+                  <div className="flex justify-between text-[11px] text-[#78716C] mb-1 font-mono">
+                    <span>Task Progression Rate</span>
+                    <span>{completedWorksCount} / {totalWorksCount} tasks</span>
+                  </div>
+                  <div className="w-full bg-[#E8E2D8] h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#C59B4B] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${completionRate}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Practice Bulletins & Admin Updates Section */}
+              <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D8]">
+                  <div className="flex items-center gap-2">
+                    <Radio className="w-4 h-4 text-[#C59B4B]" />
+                    <h3 className="text-lg font-serif font-bold text-[#0F172A]">
+                      Practice Bulletins & Live Updates from Sanctuary Director
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-mono text-emerald-700 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Live Synced</span>
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {bulletins.map((b) => {
+                    const isAcked = b.acknowledgedBy.includes(affiliate.id);
+                    return (
+                      <div
+                        key={b.id}
+                        className={`p-4 rounded-2xl border text-xs space-y-2 transition-all ${
+                          !isAcked
+                            ? 'bg-[#FAF3E3]/40 border-[#C59B4B]/60 ring-1 ring-[#C59B4B]/30'
+                            : 'bg-[#FCFBF9] border-[#E8E2D8]'
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                b.priority === 'urgent'
+                                  ? 'bg-red-50 text-red-700 border border-red-200'
+                                  : b.priority === 'payout'
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                  : b.priority === 'scheduling'
+                                  ? 'bg-blue-50 text-blue-800 border border-blue-200'
+                                  : 'bg-[#FAF3E3] text-[#7A5B20] border border-[#C59B4B]/30'
+                              }`}
+                            >
+                              {b.priority}
+                            </span>
+                            <h4 className="font-bold text-[#0F172A] text-sm">{b.title}</h4>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-[#78716C]">
+                              {new Date(b.createdAt).toLocaleDateString()}
+                            </span>
+                            {isAcked ? (
+                              <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-mono">
+                                ✓ Acknowledged
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleAcknowledgeBulletin(b.id)}
+                                className="px-2.5 py-1 rounded bg-[#0F172A] text-white hover:bg-[#C59B4B] hover:text-[#0F172A] transition-colors text-[10px] font-bold"
+                              >
+                                Mark Acknowledged
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <p className="text-[#526071] leading-relaxed">{b.content}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Metrics */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white p-5 rounded-2xl border border-[#E8E2D8]">
@@ -905,18 +1150,98 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
 
               {/* Commission Summary */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 bg-[#FCFBF9] rounded-xl border border-[#E8E2D8]">
+                <div className="p-4 bg-[#FCFBF9] rounded-2xl border border-[#E8E2D8]">
                   <span className="text-[#64748B]">Accumulated Honoraria</span>
-                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1">$740 USD</div>
+                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1 font-mono">
+                    ${earnedHonoraria.toLocaleString()} USD
+                  </div>
+                  <span className="text-[11px] text-emerald-700">From completed consultations</span>
                 </div>
-                <div className="p-4 bg-[#FCFBF9] rounded-xl border border-[#E8E2D8]">
+
+                <div className="p-4 bg-[#FCFBF9] rounded-2xl border border-[#E8E2D8]">
                   <span className="text-[#64748B]">Disbursed Payouts</span>
-                  <div className="text-2xl font-serif font-bold text-emerald-700 mt-1">$580 USD</div>
+                  <div className="text-2xl font-serif font-bold text-emerald-700 mt-1 font-mono">
+                    ${totalPaidOut.toLocaleString()} USD
+                  </div>
+                  <span className="text-[11px] text-[#78716C]">{payouts.length} Settled disbursements</span>
                 </div>
-                <div className="p-4 bg-[#FCFBF9] rounded-xl border border-[#E8E2D8]">
-                  <span className="text-[#64748B]">Pending Next Cycle</span>
-                  <div className="text-2xl font-serif font-bold text-[#C59B4B] mt-1">$160 USD</div>
+
+                <div className="p-4 bg-amber-50/50 rounded-2xl border border-amber-200 text-xs">
+                  <span className="text-amber-900 font-semibold">Pending Next Disbursement</span>
+                  <div className="text-2xl font-serif font-bold text-amber-900 mt-1 font-mono">
+                    ${pendingPayout.toLocaleString()} USD
+                  </div>
+                  <span className="text-[11px] text-amber-700">Processed bi-monthly by Admin</span>
                 </div>
+              </div>
+
+              {/* Verified Payouts History Ledger */}
+              <div className="space-y-3 pt-4 border-t border-[#E8E2D8]">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                    My Payout & Disbursement Records
+                  </h4>
+                  <span className="text-xs text-[#64748B] font-mono">
+                    Preferred: {affiliate.payoutMethodPreference?.toUpperCase() || 'WISE'}
+                  </span>
+                </div>
+
+                {payouts.length === 0 ? (
+                  <div className="p-6 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8] text-center text-xs text-[#78716C]">
+                    No disbursements logged yet. Once Admin executes a payout, transaction receipts will appear here in real time.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#E8E2D8] text-[#78716C] uppercase tracking-wider text-[10px]">
+                          <th className="py-2.5 px-3">Date</th>
+                          <th className="py-2.5 px-3">Amount</th>
+                          <th className="py-2.5 px-3">Method & Details</th>
+                          <th className="py-2.5 px-3">Reference / Batch ID</th>
+                          <th className="py-2.5 px-3">Status</th>
+                          <th className="py-2.5 px-3">Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#E8E2D8]/60">
+                        {payouts.map((p) => (
+                          <tr key={p.id} className="hover:bg-[#FAF8F5]">
+                            <td className="py-3 px-3 font-mono text-[#64748B]">
+                              {new Date(p.createdAt).toLocaleDateString()}
+                            </td>
+
+                            <td className="py-3 px-3 font-mono font-bold text-emerald-800 text-sm">
+                              ${p.amount.toLocaleString()} {p.currency}
+                            </td>
+
+                            <td className="py-3 px-3">
+                              <span className="px-2 py-0.5 rounded bg-[#FAF3E3] text-[#7A5B20] border border-[#C59B4B]/30 uppercase text-[10px] font-bold">
+                                {p.method.replace('_', ' ')}
+                              </span>
+                              <div className="text-[10px] text-[#78716C] font-mono mt-0.5 truncate max-w-xs">
+                                {p.methodDetails}
+                              </div>
+                            </td>
+
+                            <td className="py-3 px-3 font-mono text-[11px] text-[#0F172A]">
+                              {p.referenceId}
+                            </td>
+
+                            <td className="py-3 px-3">
+                              <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-mono uppercase font-bold">
+                                ✓ {p.status}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-3 text-[#526071] text-[11px]">
+                              {p.notes || 'Consultation honoraria'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}

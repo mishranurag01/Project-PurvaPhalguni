@@ -36,6 +36,14 @@ export default function App() {
         setReducedMotion(true);
       }
     }
+
+    const unsubscribe = PracticeStore.subscribe(() => {
+      setUsers(PracticeStore.getUsers());
+      setSettings(PracticeStore.getSettings());
+      setServices(PracticeStore.getServices());
+      setReviews(PracticeStore.getReviews());
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleRoleChange = (role: UserRole) => {

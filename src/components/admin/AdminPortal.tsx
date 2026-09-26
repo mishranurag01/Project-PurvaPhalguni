@@ -9,7 +9,11 @@ import {
   ResearchStudy,
   ResearchParticipant,
   AuditLogEntry,
-  WebsiteSettings
+  WebsiteSettings,
+  PartnerPayout,
+  AdminBulletin,
+  PayoutMethod,
+  BulletinPriority
 } from '../../types/practice';
 import { PracticeStore } from '../../services/store';
 import { JHoraService } from '../../services/jhoraService';
@@ -17,6 +21,11 @@ import { InteractiveKundali } from '../InteractiveKundali';
 import { PlanetaryMatrix } from '../PlanetaryMatrix';
 import { DashaTransitTimeline } from '../DashaTransitTimeline';
 import { MagneticButton } from '../MagneticButton';
+import { AddAffiliateModal } from './AddAffiliateModal';
+import { RemoveAffiliateModal } from './RemoveAffiliateModal';
+import { EditAffiliateModal } from './EditAffiliateModal';
+import { PartnerPayoutModal } from './PartnerPayoutModal';
+import { PracticeBroadcastModal } from './PracticeBroadcastModal';
 import {
   ShieldCheck,
   TrendingUp,
@@ -39,7 +48,21 @@ import {
   HeartPulse,
   LogOut,
   Search,
-  Sparkles
+  Sparkles,
+  UserPlus,
+  UserMinus,
+  Radio,
+  Bell,
+  CreditCard,
+  ArrowUpRight,
+  Wallet,
+  Briefcase,
+  Clock,
+  BarChart3,
+  Sliders,
+  Check,
+  Send,
+  Eye
 } from 'lucide-react';
 import { soundSynth } from '../../utils/soundAmbience';
 
@@ -88,6 +111,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [researchStudy, setResearchStudy] = useState<ResearchStudy>(PracticeStore.getResearchStudy());
   const [researchParticipants, setResearchParticipants] = useState<ResearchParticipant[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [payouts, setPayouts] = useState<PartnerPayout[]>([]);
+  const [bulletins, setBulletins] = useState<AdminBulletin[]>([]);
+  const [workloadSummary, setWorkloadSummary] = useState(() => PracticeStore.getAffiliateWorkloadSummary());
+
+  // Affiliate & Workload UI State
+  const [affiliateSubTab, setAffiliateSubTab] = useState<'roster' | 'workload' | 'bulletins'>('roster');
+  const [workloadFilter, setWorkloadFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [partnerFilter, setPartnerFilter] = useState<string>('all');
+  const [actionNotification, setActionNotification] = useState<string | null>(null);
+
+  // Modals
+  const [showAddAffiliateModal, setShowAddAffiliateModal] = useState(false);
+  const [showRemoveAffiliateModal, setShowRemoveAffiliateModal] = useState(false);
+  const [targetRemoveAffiliate, setTargetRemoveAffiliate] = useState<UserProfile | null>(null);
+  const [showEditAffiliateModal, setShowEditAffiliateModal] = useState(false);
+  const [editingAffiliate, setEditingAffiliate] = useState<UserProfile | null>(null);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [preselectedPayoutAffiliateId, setPreselectedPayoutAffiliateId] = useState<string | undefined>(undefined);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
 
   // Modals & Sub-forms
   const [selectedReview, setSelectedReview] = useState<ReviewItem | null>(null);
@@ -101,6 +143,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   useEffect(() => {
     loadAllData();
+
+    // Subscribe to real-time events across portals and actions
+    const unsubscribe = PracticeStore.subscribe(() => {
+      loadAllData();
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const loadAllData = () => {
@@ -112,6 +161,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setDocuments(PracticeStore.getDocuments());
     setResearchParticipants(PracticeStore.getResearchParticipants());
     setAuditLogs(PracticeStore.getAuditLogs());
+    setPayouts(PracticeStore.getPayouts());
+    setBulletins(PracticeStore.getBulletins());
+    setWorkloadSummary(PracticeStore.getAffiliateWorkloadSummary());
+  };
+
+  const showToast = (msg: string) => {
+    setActionNotification(msg);
+    setTimeout(() => {
+      setActionNotification((prev) => (prev === msg ? null : prev));
+    }, 3500);
   };
 
   const handleSaveWebsiteContent = (e: React.FormEvent) => {
@@ -860,43 +919,784 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           )}
 
-          {/* TAB 7: AFFILIATES */}
+          {/* TAB 7: AFFILIATE PRACTITIONER MANAGEMENT & WORKLOAD TRACKER */}
           {activeTab === 'affiliates' && (
             <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
-              <h3 className="text-xl font-serif font-bold text-[#0F172A] pb-3 border-b border-[#E8E2D8]">
-                Affiliate Practitioner Management
-              </h3>
+              {/* Header with Title & Action Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E8E2D8]">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#C59B4B] animate-pulse" />
+                    <span className="text-[10px] uppercase tracking-widest text-[#C59B4B] font-bold">
+                      Practitioner Governance & Live Sync
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-serif font-bold text-[#0F172A] mt-0.5">
+                    Affiliate Practitioners & Workload Progression
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Monitor active partner caseloads, track pending vs completed consultations, disburse honoraria, and broadcast synchronized practice bulletins.
+                  </p>
+                </div>
 
-              <div className="space-y-4">
-                {users
-                  .filter((u) => u.role === 'affiliate')
-                  .map((aff) => (
-                    <div key={aff.id} className="p-6 bg-[#FCFBF9] rounded-2xl border border-[#E8E2D8] space-y-3 text-xs">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-serif font-bold text-lg text-[#0F172A]">{aff.name}</h4>
-                          <span className="text-[#A87F32] font-medium">{aff.specialty}</span>
-                        </div>
-                        <span className="px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">
-                          Code: {aff.affiliateCode} · Commission: {((aff.commissionRate || 0.2) * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                      <p className="text-[#526071]">{aff.bio}</p>
-                    </div>
-                  ))}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => setShowAddAffiliateModal(true)}
+                    className="px-3.5 py-2 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#C59B4B] hover:text-[#0F172A] transition-colors flex items-center gap-1.5 shadow-xs"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Add Partner</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowBroadcastModal(true)}
+                    className="px-3 py-2 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs font-medium text-[#0F172A] hover:bg-[#FAF3E3] transition-colors flex items-center gap-1.5"
+                  >
+                    <Radio className="w-3.5 h-3.5 text-[#C59B4B]" />
+                    <span>Broadcast Sync</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setPreselectedPayoutAffiliateId(undefined);
+                      setShowPayoutModal(true);
+                    }}
+                    className="px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition-colors flex items-center gap-1.5"
+                  >
+                    <DollarSign className="w-3.5 h-3.5" />
+                    <span>Send Payout</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Executive Workload & Completion Overview (How Admin Knows Pending vs Done) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <div className="p-4 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8]">
+                  <div className="flex items-center justify-between text-[#78716C] text-xs">
+                    <span>Overall Completion</span>
+                    <BarChart3 className="w-4 h-4 text-[#C59B4B]" />
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1">
+                    {workloadSummary.globalCompletionRate}%
+                  </div>
+                  <div className="w-full bg-[#E8E2D8] h-1.5 rounded-full mt-2 overflow-hidden">
+                    <div
+                      className="bg-[#C59B4B] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${workloadSummary.globalCompletionRate}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-[#78716C] mt-1 block">
+                    {workloadSummary.totalCompletedWorks} of {workloadSummary.totalAllWorks} total tasks done
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8]">
+                  <div className="flex items-center justify-between text-[#78716C] text-xs">
+                    <span>Pending Works</span>
+                    <Clock className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-amber-800 mt-1">
+                    {workloadSummary.totalPendingWorks}
+                  </div>
+                  <div className="text-[11px] text-[#78716C] mt-1">
+                    Sessions to conduct, charts to analyze & summaries to deliver
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8]">
+                  <div className="flex items-center justify-between text-[#78716C] text-xs">
+                    <span>Completed Works</span>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-emerald-800 mt-1">
+                    {workloadSummary.totalCompletedWorks}
+                  </div>
+                  <div className="text-[11px] text-[#78716C] mt-1">
+                    Conducted readings & delivered client summaries
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8]">
+                  <div className="flex items-center justify-between text-[#78716C] text-xs">
+                    <span>Unpaid Honoraria Due</span>
+                    <Wallet className="w-4 h-4 text-[#A87F32]" />
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1">
+                    ${workloadSummary.totalPendingPayouts.toLocaleString()} USD
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('payments')}
+                    className="text-[10px] text-[#C59B4B] font-semibold hover:underline mt-1 block"
+                  >
+                    View Payout Ledger →
+                  </button>
+                </div>
+              </div>
+
+              {/* Sub-Navigation Tabs */}
+              <div className="flex items-center gap-2 border-b border-[#E8E2D8] pb-1 text-xs">
+                <button
+                  onClick={() => setAffiliateSubTab('roster')}
+                  className={`pb-2.5 px-3 font-semibold transition-colors border-b-2 flex items-center gap-1.5 ${
+                    affiliateSubTab === 'roster'
+                      ? 'border-[#C59B4B] text-[#0F172A]'
+                      : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Practitioner Roster ({users.filter((u) => u.role === 'affiliate').length})</span>
+                </button>
+
+                <button
+                  onClick={() => setAffiliateSubTab('workload')}
+                  className={`pb-2.5 px-3 font-semibold transition-colors border-b-2 flex items-center gap-1.5 ${
+                    affiliateSubTab === 'workload'
+                      ? 'border-[#C59B4B] text-[#0F172A]'
+                      : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  <span>Pending vs Done Workload Board</span>
+                  {workloadSummary.totalPendingWorks > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 font-mono text-[9px] font-bold">
+                      {workloadSummary.totalPendingWorks}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setAffiliateSubTab('bulletins')}
+                  className={`pb-2.5 px-3 font-semibold transition-colors border-b-2 flex items-center gap-1.5 ${
+                    affiliateSubTab === 'bulletins'
+                      ? 'border-[#C59B4B] text-[#0F172A]'
+                      : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
+                  }`}
+                >
+                  <Radio className="w-4 h-4" />
+                  <span>Practice Bulletins & Live Sync ({bulletins.length})</span>
+                </button>
+              </div>
+
+              {/* SUBTAB 1: PRACTITIONER ROSTER */}
+              {affiliateSubTab === 'roster' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-xs text-[#64748B]">
+                    <span>Active Practitioner Partners ({users.filter((u) => u.role === 'affiliate').length})</span>
+                    <span className="text-[11px]">Any update from admin automatically syncs live to all practitioners</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    {workloadSummary.affiliateMetrics.map((m) => {
+                      const aff = m.affiliate;
+                      return (
+                        <div
+                          key={aff.id}
+                          className="p-6 bg-[#FCFBF9] rounded-2xl border border-[#E8E2D8] hover:border-[#C59B4B]/50 transition-all text-xs space-y-4"
+                        >
+                          {/* Top row: Name, Specialty, Badges */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-11 h-11 rounded-2xl bg-[#FAF3E3] border border-[#C59B4B]/30 flex items-center justify-center font-serif font-bold text-lg text-[#0F172A]">
+                                {aff.name.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-serif font-bold text-lg text-[#0F172A]">{aff.name}</h4>
+                                  <span
+                                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                      aff.activeStatus === 'active'
+                                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                        : 'bg-amber-50 text-amber-900 border border-amber-200'
+                                    }`}
+                                  >
+                                    {aff.activeStatus?.toUpperCase() || 'ACTIVE'}
+                                  </span>
+                                </div>
+                                <span className="text-[#A87F32] font-medium">{aff.specialty}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="px-2.5 py-1 rounded-lg bg-white border border-[#E8E2D8] font-mono text-[10px] text-[#0F172A]">
+                                Code: <strong>{aff.affiliateCode}</strong> · Commission:{' '}
+                                <strong>{((aff.commissionRate || 0.25) * 100).toFixed(0)}%</strong>
+                              </span>
+                              <span className="px-2.5 py-1 rounded-lg bg-[#FAF3E3] border border-[#C59B4B]/30 font-medium text-[10px] text-[#7A5B20]">
+                                {aff.workCapacity || '8 sessions / wk'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Bio */}
+                          <p className="text-[#526071]">{aff.bio}</p>
+
+                          {/* Workload Progress & Financials Grid */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3.5 rounded-xl bg-white border border-[#E8E2D8]">
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider text-[#78716C] font-semibold">
+                                Caseload
+                              </span>
+                              <div className="font-bold text-[#0F172A] text-sm mt-0.5">
+                                {m.assignedClientsCount} Clients
+                              </div>
+                              <span className="text-[10px] text-[#64748B]">
+                                {m.bookingsCount} Total Bookings
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider text-[#78716C] font-semibold">
+                                Pending Works
+                              </span>
+                              <div className="font-bold text-amber-800 text-sm mt-0.5 flex items-center gap-1.5">
+                                <span>{m.pendingWorksCount} Works</span>
+                                {m.pendingWorksCount > 0 && (
+                                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                )}
+                              </div>
+                              <span className="text-[10px] text-[#78716C]">
+                                {m.pendingSessions.length} sessions, {m.pendingSummaries.length} summaries
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider text-[#78716C] font-semibold">
+                                Works Done & Rate
+                              </span>
+                              <div className="font-bold text-emerald-800 text-sm mt-0.5">
+                                {m.completedWorksCount} Done ({m.completionRate}%)
+                              </div>
+                              <div className="w-full bg-[#E8E2D8] h-1.5 rounded-full mt-1 overflow-hidden">
+                                <div
+                                  className="bg-emerald-600 h-full rounded-full"
+                                  style={{ width: `${m.completionRate}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider text-[#78716C] font-semibold">
+                                Unpaid Balance
+                              </span>
+                              <div className="font-bold text-[#0F172A] text-sm mt-0.5 font-mono">
+                                ${m.pendingPayout.toLocaleString()} USD
+                              </div>
+                              <span className="text-[10px] text-[#78716C]">
+                                Total paid: ${m.paidOut}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Preferred Payout Method Preview */}
+                          <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]">
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="w-4 h-4 text-[#C59B4B] shrink-0" />
+                              <span className="text-[#64748B]">Payout Rail:</span>
+                              <span className="font-semibold text-[#0F172A] uppercase">
+                                {aff.payoutMethodPreference || 'Wise'}
+                              </span>
+                              <span className="text-[#78716C] font-mono text-[10px] truncate max-w-xs">
+                                ({aff.payoutAccountDetails || aff.email})
+                              </span>
+                            </div>
+
+                            {/* Partner Card Actions */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                onClick={() => {
+                                  setPreselectedPayoutAffiliateId(aff.id);
+                                  setShowPayoutModal(true);
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold hover:bg-emerald-100 transition-colors flex items-center gap-1 text-xs"
+                              >
+                                <DollarSign className="w-3.5 h-3.5" />
+                                <span>Send Payout</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setEditingAffiliate(aff);
+                                  setShowEditAffiliateModal(true);
+                                }}
+                                className="px-3 py-1.5 rounded-lg border border-[#E8E2D8] bg-white text-[#0F172A] font-semibold hover:bg-[#FAF8F5] transition-colors flex items-center gap-1 text-xs"
+                              >
+                                <Edit3 className="w-3.5 h-3.5 text-[#C59B4B]" />
+                                <span>Edit</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setTargetRemoveAffiliate(aff);
+                                  setShowRemoveAffiliateModal(true);
+                                }}
+                                className="px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-700 font-semibold hover:bg-red-100 transition-colors flex items-center gap-1 text-xs"
+                              >
+                                <UserMinus className="w-3.5 h-3.5" />
+                                <span>Remove / Suspend</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* SUBTAB 2: PENDING VS DONE WORKLOAD BOARD */}
+              {affiliateSubTab === 'workload' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E8E2D8] text-xs">
+                    <div>
+                      <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                        Master Case Workload & Task Progression Board
+                      </h4>
+                      <p className="text-[11px] text-[#64748B]">
+                        Live audit of every client consultation: scheduled preparation, JHora chart verification, and post-session summary delivery.
+                      </p>
+                    </div>
+
+                    {/* Filter Pills */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => setWorkloadFilter('all')}
+                        className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                          workloadFilter === 'all'
+                            ? 'bg-[#0F172A] text-white'
+                            : 'bg-[#FCFBF9] border border-[#E8E2D8] text-[#64748B] hover:text-[#0F172A]'
+                        }`}
+                      >
+                        All Works ({bookings.length})
+                      </button>
+
+                      <button
+                        onClick={() => setWorkloadFilter('pending')}
+                        className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                          workloadFilter === 'pending'
+                            ? 'bg-amber-800 text-white'
+                            : 'bg-[#FCFBF9] border border-[#E8E2D8] text-[#64748B] hover:text-amber-800'
+                        }`}
+                      >
+                        Pending Works ({workloadSummary.totalPendingWorks})
+                      </button>
+
+                      <button
+                        onClick={() => setWorkloadFilter('completed')}
+                        className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                          workloadFilter === 'completed'
+                            ? 'bg-emerald-800 text-white'
+                            : 'bg-[#FCFBF9] border border-[#E8E2D8] text-[#64748B] hover:text-emerald-800'
+                        }`}
+                      >
+                        Completed & Delivered ({workloadSummary.totalCompletedWorks})
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Workload Cases Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#E8E2D8] text-[#78716C] uppercase tracking-wider text-[10px]">
+                          <th className="py-3 px-3">Client & Service</th>
+                          <th className="py-3 px-3">Assigned Partner</th>
+                          <th className="py-3 px-3">Date & Time</th>
+                          <th className="py-3 px-3">Progress Stages</th>
+                          <th className="py-3 px-3">Work Status</th>
+                          <th className="py-3 px-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#E8E2D8]/60">
+                        {bookings
+                          .filter((b) => {
+                            const isPending = b.status === 'confirmed' || !b.hasSummaryShared;
+                            const isDone = b.status === 'completed' && b.hasSummaryShared;
+                            if (workloadFilter === 'pending') return isPending;
+                            if (workloadFilter === 'completed') return isDone;
+                            return true;
+                          })
+                          .map((b) => {
+                            const isSessionDone = b.status === 'completed';
+                            const isSummaryDelivered = b.hasSummaryShared;
+                            const isAllDone = isSessionDone && isSummaryDelivered;
+
+                            return (
+                              <tr key={b.id} className="hover:bg-[#FAF8F5]">
+                                <td className="py-3.5 px-3">
+                                  <div className="font-bold text-[#0F172A]">{b.clientName}</div>
+                                  <div className="text-[#64748B] text-[11px] font-mono">{b.serviceCode} · {b.serviceName}</div>
+                                </td>
+
+                                <td className="py-3.5 px-3">
+                                  <div className="font-semibold text-[#A87F32]">{b.affiliateName}</div>
+                                  <div className="text-[#78716C] text-[10px]">Partner in Charge</div>
+                                </td>
+
+                                <td className="py-3.5 px-3 font-mono text-[#64748B]">
+                                  {b.date} · {b.timeSlot}
+                                </td>
+
+                                <td className="py-3.5 px-3">
+                                  <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                                    <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                      ✓ Consent & Birth Details
+                                    </span>
+                                    <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                      ✓ JHora Chart
+                                    </span>
+                                    <span
+                                      className={`px-1.5 py-0.5 rounded ${
+                                        isSessionDone
+                                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                          : 'bg-amber-50 text-amber-900 border border-amber-200 font-semibold'
+                                      }`}
+                                    >
+                                      {isSessionDone ? '✓ Session Done' : '⏳ Scheduled'}
+                                    </span>
+                                    <span
+                                      className={`px-1.5 py-0.5 rounded ${
+                                        isSummaryDelivered
+                                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                          : 'bg-amber-50 text-amber-900 border border-amber-200 font-semibold'
+                                      }`}
+                                    >
+                                      {isSummaryDelivered ? '✓ Summary Folio Delivered' : '⏳ Summary Pending'}
+                                    </span>
+                                  </div>
+                                </td>
+
+                                <td className="py-3.5 px-3">
+                                  {isAllDone ? (
+                                    <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold inline-flex items-center gap-1">
+                                      <CheckCircle2 className="w-3 h-3" />
+                                      <span>Done</span>
+                                    </span>
+                                  ) : (
+                                    <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold inline-flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      <span>
+                                        {!isSessionDone ? 'Session Pending' : 'Summary Pending'}
+                                      </span>
+                                    </span>
+                                  )}
+                                </td>
+
+                                <td className="py-3.5 px-3 text-right">
+                                  {!b.hasSummaryShared ? (
+                                    <button
+                                      onClick={() => {
+                                        // Mark summary delivered in bookings
+                                        const updated = bookings.map((item) =>
+                                          item.id === b.id
+                                            ? { ...item, hasSummaryShared: true, status: 'completed' as const }
+                                            : item
+                                        );
+                                        setBookings(updated);
+                                        PracticeStore.saveBookings(updated);
+                                        soundSynth.playCelestialChime();
+                                        showToast(`Summary for ${b.clientName} marked as delivered to client.`);
+                                      }}
+                                      className="px-2.5 py-1 rounded bg-[#C59B4B] text-[#0F172A] font-bold text-[11px] hover:bg-[#FAF3E3] transition-colors"
+                                    >
+                                      Deliver Summary
+                                    </button>
+                                  ) : (
+                                    <span className="text-[10px] text-[#78716C] font-mono">
+                                      Archived & Shared
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* SUBTAB 3: PRACTICE BULLETINS & LIVE SYNC */}
+              {affiliateSubTab === 'bulletins' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E8E2D8] text-xs">
+                    <div>
+                      <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                        Practice Bulletins & Live Synchronized Broadcasts
+                      </h4>
+                      <p className="text-[11px] text-[#64748B]">
+                        Broadcast announcements and protocol updates directly to practitioner dashboards with live digital acknowledgment.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setShowBroadcastModal(true)}
+                      className="px-3.5 py-2 rounded-xl bg-[#0F172A] text-white font-semibold hover:bg-[#C59B4B] hover:text-[#0F172A] transition-colors flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>New Broadcast</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {bulletins.map((b) => {
+                      const totalPartners = users.filter((u) => u.role === 'affiliate').length;
+                      const ackCount = b.acknowledgedBy.length;
+
+                      return (
+                        <div
+                          key={b.id}
+                          className="p-5 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8] space-y-2 text-xs"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                  b.priority === 'urgent'
+                                    ? 'bg-red-50 text-red-700 border border-red-200'
+                                    : b.priority === 'payout'
+                                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                    : b.priority === 'scheduling'
+                                    ? 'bg-blue-50 text-blue-800 border border-blue-200'
+                                    : 'bg-[#FAF3E3] text-[#7A5B20] border border-[#C59B4B]/30'
+                                }`}
+                              >
+                                {b.priority}
+                              </span>
+                              <h4 className="font-bold text-[#0F172A] text-sm">{b.title}</h4>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-[11px] text-[#64748B]">
+                              <span>{new Date(b.createdAt).toLocaleDateString()}</span>
+                              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white border border-[#E8E2D8]">
+                                Acknowledged: {ackCount}/{totalPartners}
+                              </span>
+                            </div>
+                          </div>
+
+                          <p className="text-[#526071] leading-relaxed">{b.content}</p>
+
+                          <div className="pt-2 border-t border-[#E8E2D8] flex items-center justify-between text-[11px] text-[#78716C]">
+                            <span>Author: {b.authorName}</span>
+                            <span className="font-mono text-[10px] text-emerald-700 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <span>Live Synced to Practitioner Desks</span>
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* TAB 8: PAYMENTS */}
+          {/* TAB 8: PAYMENTS & PARTNER DISBURSEMENTS */}
           {activeTab === 'payments' && (
             <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
-              <h3 className="text-xl font-serif font-bold text-[#0F172A] pb-3 border-b border-[#E8E2D8]">
-                Payments & Payout Ledger
-              </h3>
-              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8] flex items-center justify-between text-xs">
-                <span>Total Settled Consultations: <strong>${totalRevenue} USD</strong></span>
-                <span>Affiliate Honoraria Disbursed: <strong>$1,320 USD</strong></span>
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E8E2D8]">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    <span className="text-[10px] uppercase tracking-widest text-emerald-800 font-bold">
+                      Treasury & Disbursements
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-serif font-bold text-[#0F172A] mt-0.5">
+                    Partner Honoraria & Payout Ledger
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Calculate commissions, disburse payouts via verified channels (Wise, Direct Wire, Stripe, PayPal), and maintain audit-certified records.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setPreselectedPayoutAffiliateId(undefined);
+                    setShowPayoutModal(true);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-800 text-white text-xs font-bold hover:bg-emerald-900 transition-colors flex items-center gap-2 shadow-xs"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span>Send Partner Payout</span>
+                </button>
+              </div>
+
+              {/* Financial Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8]">
+                  <span className="text-xs text-[#78716C]">Gross Consultations Settled</span>
+                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1">
+                    ${totalRevenue.toLocaleString()} USD
+                  </div>
+                  <span className="text-[11px] text-emerald-700">100% Client payments verified</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8]">
+                  <span className="text-xs text-[#78716C]">Total Honoraria Disbursed</span>
+                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1">
+                    ${workloadSummary.totalPaidOut.toLocaleString()} USD
+                  </div>
+                  <span className="text-[11px] text-[#78716C]">Across all payout rails</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200">
+                  <span className="text-xs text-amber-900 font-medium">Pending Payout Liabilities</span>
+                  <div className="text-2xl font-serif font-bold text-amber-900 mt-1">
+                    ${workloadSummary.totalPendingPayouts.toLocaleString()} USD
+                  </div>
+                  <span className="text-[11px] text-amber-700">Due for completed readings</span>
+                </div>
+              </div>
+
+              {/* Partner Balances & Payout Action Table */}
+              <div className="space-y-3">
+                <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                  Partner Commission Balances
+                </h4>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#E8E2D8] text-[#78716C] uppercase tracking-wider text-[10px]">
+                        <th className="py-2.5 px-3">Practitioner</th>
+                        <th className="py-2.5 px-3">Commission Rate</th>
+                        <th className="py-2.5 px-3">Total Earned</th>
+                        <th className="py-2.5 px-3">Total Paid Out</th>
+                        <th className="py-2.5 px-3">Unpaid Balance Due</th>
+                        <th className="py-2.5 px-3">Preferred Payout Rail</th>
+                        <th className="py-2.5 px-3 text-right">Disburse Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E8E2D8]/60">
+                      {workloadSummary.affiliateMetrics.map((m) => {
+                        const aff = m.affiliate;
+                        return (
+                          <tr key={aff.id} className="hover:bg-[#FAF8F5]">
+                            <td className="py-3 px-3">
+                              <div className="font-bold text-[#0F172A]">{aff.name}</div>
+                              <div className="text-[10px] text-[#64748B]">{aff.email}</div>
+                            </td>
+
+                            <td className="py-3 px-3 font-mono">
+                              {((aff.commissionRate || 0.25) * 100).toFixed(0)}%
+                            </td>
+
+                            <td className="py-3 px-3 font-mono font-semibold text-[#0F172A]">
+                              ${m.earnedCommission} USD
+                            </td>
+
+                            <td className="py-3 px-3 font-mono text-[#64748B]">
+                              ${m.paidOut} USD
+                            </td>
+
+                            <td className="py-3 px-3">
+                              <span
+                                className={`px-2 py-0.5 rounded font-mono font-bold text-[11px] ${
+                                  m.pendingPayout > 0
+                                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                    : 'bg-gray-100 text-gray-700'
+                                }`}
+                              >
+                                ${m.pendingPayout} USD
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-3">
+                              <div className="uppercase font-semibold text-[10px] text-[#0F172A]">
+                                {aff.payoutMethodPreference || 'wise'}
+                              </div>
+                              <div className="text-[10px] text-[#78716C] font-mono truncate max-w-xs">
+                                {aff.payoutAccountDetails || aff.email}
+                              </div>
+                            </td>
+
+                            <td className="py-3 px-3 text-right">
+                              <button
+                                onClick={() => {
+                                  setPreselectedPayoutAffiliateId(aff.id);
+                                  setShowPayoutModal(true);
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-800 text-white font-semibold hover:bg-emerald-900 transition-colors text-xs"
+                              >
+                                Disburse
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Payout Transactions History Table */}
+              <div className="space-y-3 pt-4 border-t border-[#E8E2D8]">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                    Historical Disbursement Records
+                  </h4>
+                  <span className="text-xs text-[#64748B] font-mono">
+                    {payouts.length} Settled Transactions
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#E8E2D8] text-[#78716C] uppercase tracking-wider text-[10px]">
+                        <th className="py-2.5 px-3">Date</th>
+                        <th className="py-2.5 px-3">Partner</th>
+                        <th className="py-2.5 px-3">Amount</th>
+                        <th className="py-2.5 px-3">Method & Details</th>
+                        <th className="py-2.5 px-3">Reference / Batch ID</th>
+                        <th className="py-2.5 px-3">Status</th>
+                        <th className="py-2.5 px-3">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E8E2D8]/60">
+                      {payouts.map((p) => (
+                        <tr key={p.id} className="hover:bg-[#FAF8F5]">
+                          <td className="py-3 px-3 font-mono text-[#64748B]">
+                            {new Date(p.createdAt).toLocaleDateString()}
+                          </td>
+
+                          <td className="py-3 px-3 font-semibold text-[#0F172A]">
+                            {p.affiliateName}
+                          </td>
+
+                          <td className="py-3 px-3 font-mono font-bold text-emerald-800">
+                            ${p.amount.toLocaleString()} {p.currency}
+                          </td>
+
+                          <td className="py-3 px-3">
+                            <span className="px-2 py-0.5 rounded bg-[#FAF3E3] text-[#7A5B20] border border-[#C59B4B]/30 uppercase text-[10px] font-bold">
+                              {p.method.replace('_', ' ')}
+                            </span>
+                            <div className="text-[10px] text-[#78716C] font-mono mt-0.5 truncate max-w-xs">
+                              {p.methodDetails}
+                            </div>
+                          </td>
+
+                          <td className="py-3 px-3 font-mono text-[11px] text-[#0F172A]">
+                            {p.referenceId}
+                          </td>
+
+                          <td className="py-3 px-3">
+                            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-mono uppercase">
+                              {p.status}
+                            </span>
+                          </td>
+
+                          <td className="py-3 px-3 text-[#526071] text-[11px]">
+                            {p.notes || 'Honoraria settlement'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -1163,6 +1963,83 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Action Notification Toast */}
+      {actionNotification && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-[#0F172A] text-white shadow-2xl border border-[#C59B4B]/40 text-xs flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
+          <CheckCircle2 className="w-5 h-5 text-[#C59B4B] shrink-0" />
+          <span className="font-medium">{actionNotification}</span>
+        </div>
+      )}
+
+      {/* Add Partner Modal */}
+      <AddAffiliateModal
+        isOpen={showAddAffiliateModal}
+        onClose={() => setShowAddAffiliateModal(false)}
+        onAdded={(newPartner) => {
+          loadAllData();
+          showToast(`Partner ${newPartner.name} onboarded successfully and synced to practice roster.`);
+        }}
+      />
+
+      {/* Remove / Suspend Partner Modal */}
+      <RemoveAffiliateModal
+        isOpen={showRemoveAffiliateModal}
+        affiliate={targetRemoveAffiliate}
+        activeAffiliates={users.filter((u) => u.role === 'affiliate')}
+        onClose={() => {
+          setShowRemoveAffiliateModal(false);
+          setTargetRemoveAffiliate(null);
+        }}
+        onRemoved={(res) => {
+          loadAllData();
+          showToast(
+            res.reassignedCount > 0
+              ? `Partner updated. ${res.reassignedCount} clients safely reassigned.`
+              : `Partner status updated.`
+          );
+        }}
+      />
+
+      {/* Edit Partner Modal */}
+      <EditAffiliateModal
+        isOpen={showEditAffiliateModal}
+        affiliate={editingAffiliate}
+        onClose={() => {
+          setShowEditAffiliateModal(false);
+          setEditingAffiliate(null);
+        }}
+        onUpdated={() => {
+          loadAllData();
+          showToast('Partner credentials & commission rate updated.');
+        }}
+      />
+
+      {/* Disburse Partner Payout Modal */}
+      <PartnerPayoutModal
+        isOpen={showPayoutModal}
+        affiliates={users.filter((u) => u.role === 'affiliate')}
+        preselectedAffiliateId={preselectedPayoutAffiliateId}
+        onClose={() => {
+          setShowPayoutModal(false);
+          setPreselectedPayoutAffiliateId(undefined);
+        }}
+        onPayoutProcessed={(p) => {
+          loadAllData();
+          showToast(`Disbursed $${p.amount} USD to ${p.affiliateName} (Ref: ${p.referenceId}).`);
+        }}
+      />
+
+      {/* Broadcast Practice Update Modal */}
+      <PracticeBroadcastModal
+        isOpen={showBroadcastModal}
+        affiliates={users.filter((u) => u.role === 'affiliate')}
+        onClose={() => setShowBroadcastModal(false)}
+        onPublished={() => {
+          loadAllData();
+          showToast('Practice update broadcast live to all practitioner consoles.');
+        }}
+      />
     </div>
   );
 };
