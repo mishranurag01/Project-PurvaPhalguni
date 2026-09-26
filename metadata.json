@@ -1,0 +1,6 @@
+{
+  "name": "PurvaPhalungi",
+  "description": "PurvaPhalungi — Modern celestial sanctuary and Vedic astrology workspace offering luminous personal readings, refined chart calculations, and private consultation management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

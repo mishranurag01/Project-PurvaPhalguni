@@ -1,0 +1,1168 @@
+import React, { useState, useEffect } from 'react';
+import {
+  UserProfile,
+  ServicePlan,
+  BookingSession,
+  ReviewItem,
+  KnowledgeNote,
+  KnowledgeDocument,
+  ResearchStudy,
+  ResearchParticipant,
+  AuditLogEntry,
+  WebsiteSettings
+} from '../../types/practice';
+import { PracticeStore } from '../../services/store';
+import { JHoraService } from '../../services/jhoraService';
+import { InteractiveKundali } from '../InteractiveKundali';
+import { PlanetaryMatrix } from '../PlanetaryMatrix';
+import { DashaTransitTimeline } from '../DashaTransitTimeline';
+import { MagneticButton } from '../MagneticButton';
+import {
+  ShieldCheck,
+  TrendingUp,
+  Users,
+  Calendar,
+  DollarSign,
+  Star,
+  Settings,
+  BookOpen,
+  FileText,
+  Activity,
+  Lock,
+  Edit3,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  Trash2,
+  Download,
+  AlertTriangle,
+  HeartPulse,
+  LogOut,
+  Search,
+  Sparkles
+} from 'lucide-react';
+import { soundSynth } from '../../utils/soundAmbience';
+
+interface AdminPortalProps {
+  admin: UserProfile;
+  settings: WebsiteSettings;
+  onUpdateSettings: (newSettings: WebsiteSettings) => void;
+  onExitPortal: () => void;
+  reducedMotion?: boolean;
+}
+
+export const AdminPortal: React.FC<AdminPortalProps> = ({
+  admin,
+  settings: initialSettings,
+  onUpdateSettings,
+  onExitPortal,
+  reducedMotion = false
+}) => {
+  const [activeTab, setActiveTab] = useState<
+    | 'dashboard'
+    | 'content'
+    | 'reviews'
+    | 'services'
+    | 'bookings'
+    | 'clients'
+    | 'affiliates'
+    | 'payments'
+    | 'astrology'
+    | 'knowledge'
+    | 'research'
+    | 'audit'
+    | 'settings'
+  >('dashboard');
+
+  // Website Settings Form State
+  const [settings, setSettings] = useState<WebsiteSettings>(initialSettings);
+  const [settingsSavedMsg, setSettingsSavedMsg] = useState(false);
+
+  // Data Collections
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [services, setServices] = useState<ServicePlan[]>([]);
+  const [bookings, setBookings] = useState<BookingSession[]>([]);
+  const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [knowledgeNotes, setKnowledgeNotes] = useState<KnowledgeNote[]>([]);
+  const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
+  const [researchStudy, setResearchStudy] = useState<ResearchStudy>(PracticeStore.getResearchStudy());
+  const [researchParticipants, setResearchParticipants] = useState<ResearchParticipant[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+
+  // Modals & Sub-forms
+  const [selectedReview, setSelectedReview] = useState<ReviewItem | null>(null);
+  const [newNoteTitle, setNewNoteTitle] = useState('');
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [newNoteCategory, setNewNoteCategory] = useState<KnowledgeNote['category']>('Medical Astrology Principles');
+  const [searchAudit, setSearchAudit] = useState('');
+
+  // Universal Astrology Workspace State
+  const [astrologyClientId, setAstrologyClientId] = useState<string>('user-client-1');
+
+  useEffect(() => {
+    loadAllData();
+  }, []);
+
+  const loadAllData = () => {
+    setUsers(PracticeStore.getUsers());
+    setServices(PracticeStore.getServices());
+    setBookings(PracticeStore.getBookings());
+    setReviews(PracticeStore.getReviews());
+    setKnowledgeNotes(PracticeStore.getKnowledgeNotes());
+    setDocuments(PracticeStore.getDocuments());
+    setResearchParticipants(PracticeStore.getResearchParticipants());
+    setAuditLogs(PracticeStore.getAuditLogs());
+  };
+
+  const handleSaveWebsiteContent = (e: React.FormEvent) => {
+    e.preventDefault();
+    soundSynth.playCelestialChime();
+    PracticeStore.saveSettings(settings);
+    onUpdateSettings(settings);
+    setSettingsSavedMsg(true);
+    setTimeout(() => setSettingsSavedMsg(false), 2500);
+  };
+
+  // Review management: filter medical claims
+  const handleToggleApproveReview = (reviewId: string) => {
+    soundSynth.playSoftTap();
+    const updated = reviews.map((r) => {
+      if (r.id === reviewId) {
+        // Prevent approval if it has medical claims
+        if (r.hasMedicalClaims) {
+          alert('Policy Violation: Reviews containing medical diagnosis or cure claims cannot be approved.');
+          return r;
+        }
+        return { ...r, isApproved: !r.isApproved };
+      }
+      return r;
+    });
+    setReviews(updated);
+    PracticeStore.saveReviews(updated);
+    PracticeStore.logAction(admin.id, admin.name, 'admin', 'REVIEW_APPROVED', `Updated review approval status for ${reviewId}`);
+  };
+
+  const handleDeleteReview = (reviewId: string) => {
+    const updated = reviews.filter((r) => r.id !== reviewId);
+    setReviews(updated);
+    PracticeStore.saveReviews(updated);
+  };
+
+  // Service management
+  const handleToggleServiceActive = (serviceId: string) => {
+    soundSynth.playSoftTap();
+    const updated = services.map((s) => (s.id === serviceId ? { ...s, isActive: !s.isActive } : s));
+    setServices(updated);
+    PracticeStore.saveServices(updated);
+  };
+
+  const handleUpdateServicePrice = (serviceId: string, newPrice: number) => {
+    const updated = services.map((s) => (s.id === serviceId ? { ...s, price: newPrice } : s));
+    setServices(updated);
+    PracticeStore.saveServices(updated);
+  };
+
+  // Client assignment to affiliate
+  const handleAssignClient = (clientId: string, affiliateId: string) => {
+    soundSynth.playSoftTap();
+    const targetAffiliate = users.find((u) => u.id === affiliateId);
+    const updated = users.map((u) => (u.id === clientId ? { ...u, assignedAffiliateId: affiliateId } : u));
+    setUsers(updated);
+    PracticeStore.saveUsers(updated);
+
+    PracticeStore.logAction(
+      admin.id,
+      admin.name,
+      'admin',
+      'CLIENT_ASSIGNED',
+      `Assigned client (${clientId}) to practitioner ${targetAffiliate?.name || affiliateId}`,
+      true
+    );
+  };
+
+  // Research participant withdrawal
+  const handleWithdrawParticipant = (participantId: string) => {
+    soundSynth.playSoftTap();
+    const updated = researchParticipants.map((p) =>
+      p.id === participantId ? { ...p, withdrawn: true, consentActive: false } : p
+    );
+    setResearchParticipants(updated);
+    PracticeStore.saveResearchParticipants(updated);
+
+    PracticeStore.logAction(
+      admin.id,
+      admin.name,
+      'admin',
+      'CONSENT_WITHDRAWN',
+      `Withdrew research participant ${participantId} and anonymized metrics.`,
+      true
+    );
+  };
+
+  // Export anonymized research dataset (CSV)
+  const handleExportResearchCSV = () => {
+    const activeData = researchParticipants.filter((p) => !p.withdrawn);
+    const csvRows = [
+      ['Deidentified_ID', 'Intake_Date', 'Signatures', 'Outcome_Category', 'Outcome_Source'],
+      ...activeData.map((p) => [
+        p.deidentifiedId,
+        p.intakeDate,
+        `"${p.primaryAstrologicalSignatures.join('; ')}"`,
+        `"${p.verifiedOutcomeCategory}"`,
+        `"${p.outcomeSource}"`
+      ])
+    ];
+
+    const csvContent = csvRows.map((e) => e.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Anonymized_Astro_Research_${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    PracticeStore.logAction(
+      admin.id,
+      admin.name,
+      'admin',
+      'DATA_EXPORT',
+      'Exported anonymized research dataset for statistical analysis.',
+      true
+    );
+  };
+
+  // Create Knowledge Note
+  const handleCreateKnowledgeNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNoteTitle.trim() || !newNoteContent.trim()) return;
+
+    soundSynth.playSoftTap();
+    const newNote: KnowledgeNote = {
+      id: `kn-${Date.now()}`,
+      title: newNoteTitle.trim(),
+      category: newNoteCategory,
+      tags: ['Reference', 'Clinical Ethos'],
+      excerpt: newNoteContent.slice(0, 100) + '...',
+      content: newNoteContent.trim(),
+      author: admin.name,
+      updatedAt: new Date().toISOString().slice(0, 10),
+      accessLevel: 'affiliate_accessible'
+    };
+
+    const updated = [newNote, ...knowledgeNotes];
+    setKnowledgeNotes(updated);
+    PracticeStore.saveKnowledgeNotes(updated);
+    setNewNoteTitle('');
+    setNewNoteContent('');
+  };
+
+  // Astrology calculation target
+  const currentAstrologyClient = users.find((u) => u.id === astrologyClientId) || users[3];
+  const chartRes = currentAstrologyClient
+    ? JHoraService.calculateClientChart(currentAstrologyClient, {
+        id: admin.id,
+        name: admin.name,
+        role: 'admin'
+      })
+    : null;
+
+  const totalRevenue = bookings
+    .filter((b) => b.paymentStatus === 'paid')
+    .reduce((sum, b) => sum + b.amount, 0);
+
+  const filteredLogs = auditLogs.filter(
+    (l) =>
+      l.actorName.toLowerCase().includes(searchAudit.toLowerCase()) ||
+      l.action.toLowerCase().includes(searchAudit.toLowerCase()) ||
+      l.details.toLowerCase().includes(searchAudit.toLowerCase())
+  );
+
+  return (
+    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      {/* Top Banner */}
+      <div className="bg-[#0F172A] text-white rounded-3xl p-6 sm:p-8 shadow-sm mb-8 flex flex-wrap items-center justify-between gap-4 border border-[#1E293B]">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#C59B4B] animate-pulse" />
+            <span className="text-xs uppercase tracking-widest text-[#C59B4B] font-semibold">
+              Executive Admin Suite
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white mt-1">
+            Governance & Practice Administration
+          </h1>
+          <p className="text-xs text-[#94A3B8] mt-0.5">
+            Full authority over services, bookings, research protocols, and ethical compliance.
+          </p>
+        </div>
+
+        <button
+          onClick={onExitPortal}
+          className="px-3.5 py-1.5 rounded-lg border border-[#334155] text-xs font-medium text-[#CBD5E1] hover:text-white flex items-center gap-1.5 transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Exit Admin</span>
+        </button>
+      </div>
+
+      {/* Main Grid: Navigation Tabs + Workspace Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Navigation Sidebar */}
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-[#E8E2D8] p-3 shadow-xs space-y-1">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'dashboard' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <TrendingUp className="w-4 h-4 text-[#C59B4B]" />
+            <span>Dashboard</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('content')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'content' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <Edit3 className="w-4 h-4 text-[#C59B4B]" />
+            <span>Website Content & Brand</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'reviews' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <Star className="w-4 h-4 text-[#C59B4B]" />
+            <span>Client Reviews ({reviews.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'services' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <FileText className="w-4 h-4 text-[#C59B4B]" />
+            <span>Services & Pricing</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('bookings')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'bookings' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <Calendar className="w-4 h-4 text-[#C59B4B]" />
+            <span>Bookings & Refunds ({bookings.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('clients')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'clients' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <Users className="w-4 h-4 text-[#C59B4B]" />
+            <span>Clients & Assignments</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('affiliates')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'affiliates' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-[#C59B4B]" />
+            <span>Affiliate Practitioners</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('payments')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'payments' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <DollarSign className="w-4 h-4 text-[#C59B4B]" />
+            <span>Payments & Payouts</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('astrology')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'astrology' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-[#C59B4B]" />
+            <span>Full Astrology Workspace</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('knowledge')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'knowledge' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <BookOpen className="w-4 h-4 text-[#C59B4B]" />
+            <span>Knowledge Centre</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('research')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'research' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <Activity className="w-4 h-4 text-[#8E7CC3]" />
+            <span>Research Workspace</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'audit' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <Lock className="w-4 h-4 text-[#C59B4B]" />
+            <span>Security Audit Log</span>
+          </button>
+        </div>
+
+        {/* Dynamic Admin Panes */}
+        <div className="lg:col-span-9 space-y-6">
+          {/* TAB 1: DASHBOARD */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-2xl border border-[#E8E2D8]">
+                  <span className="text-xs text-[#78716C]">Gross Platform Revenue</span>
+                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1">
+                    ${totalRevenue.toLocaleString()} USD
+                  </div>
+                  <span className="text-[11px] text-emerald-700">All services accounted</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-[#E8E2D8]">
+                  <span className="text-xs text-[#78716C]">Total Active Bookings</span>
+                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1">
+                    {bookings.length}
+                  </div>
+                  <span className="text-[11px] text-[#A87F32]">
+                    {bookings.filter((b) => b.status === 'confirmed').length} upcoming
+                  </span>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-[#E8E2D8]">
+                  <span className="text-xs text-[#78716C]">Total Client Roster</span>
+                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1">
+                    {users.filter((u) => u.role === 'client').length}
+                  </div>
+                  <span className="text-[11px] text-[#78716C]">Consents verified</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-[#E8E2D8]">
+                  <span className="text-xs text-[#78716C]">Active Practitioners</span>
+                  <div className="text-2xl font-serif font-bold text-[#0F172A] mt-1">
+                    {users.filter((u) => u.role === 'affiliate').length}
+                  </div>
+                  <span className="text-[11px] text-[#78716C]">Licensed affiliate cohort</span>
+                </div>
+              </div>
+
+              {/* Quick Actions / Recent Bookings */}
+              <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D8]">
+                  <h3 className="text-lg font-serif font-bold text-[#0F172A]">
+                    Recent Global Consultations
+                  </h3>
+                  <button
+                    onClick={() => setActiveTab('bookings')}
+                    className="text-xs text-[#C59B4B] hover:underline font-medium"
+                  >
+                    View All Bookings →
+                  </button>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {bookings.slice(0, 4).map((b) => (
+                    <div
+                      key={b.id}
+                      className="p-4 bg-[#FCFBF9] rounded-xl border border-[#E8E2D8] flex items-center justify-between text-xs"
+                    >
+                      <div>
+                        <div className="font-semibold text-[#0F172A]">{b.clientName}</div>
+                        <div className="text-[#64748B]">
+                          {b.serviceName} · {b.date} ({b.affiliateName})
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-[#0F172A]">${b.amount} USD</span>
+                        <div className="text-[10px] text-emerald-700 font-mono">{b.status}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: WEBSITE CONTENT (LIVE BRAND & TEXT EDITOR) */}
+          {activeTab === 'content' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <div>
+                <h3 className="text-xl font-serif font-bold text-[#0F172A]">
+                  Public Website Content & Brand Configuration
+                </h3>
+                <p className="text-xs text-[#64748B] mt-0.5">
+                  Update your practice brand name, tagline, homepage hero copy, and non-medical disclaimer in real time.
+                </p>
+              </div>
+
+              {settingsSavedMsg && (
+                <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl text-xs flex items-center gap-2 border border-emerald-200">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Website content changes published globally.</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveWebsiteContent} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
+                      Brand Name (Temporary / Editable)
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.brandName}
+                      onChange={(e) => setSettings({ ...settings, brandName: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] font-serif text-sm font-bold focus:outline-none focus:border-[#C59B4B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
+                      Primary Tagline
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.tagline}
+                      onChange={(e) => setSettings({ ...settings, tagline: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] focus:outline-none focus:border-[#C59B4B]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
+                    Mandatory Non-Medical Disclaimer (Enforced across all booking screens)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={settings.requiredDisclaimer}
+                    onChange={(e) => setSettings({ ...settings, requiredDisclaimer: e.target.value })}
+                    className="w-full p-3 rounded-xl border border-[#E8E2D8] bg-[#FAF3E3] text-[#7A5B20] text-xs focus:outline-none focus:border-[#C59B4B]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
+                      Sanctuary Contact Email
+                    </label>
+                    <input
+                      type="email"
+                      value={settings.contactEmail}
+                      onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] focus:outline-none focus:border-[#C59B4B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
+                      Sanctuary Contact Phone
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.contactPhone}
+                      onChange={(e) => setSettings({ ...settings, contactPhone: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] focus:outline-none focus:border-[#C59B4B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
+                      Sanctuary Location
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.officeLocation}
+                      onChange={(e) => setSettings({ ...settings, officeLocation: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] focus:outline-none focus:border-[#C59B4B]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
+                    About Story Text
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={settings.aboutStory}
+                    onChange={(e) => setSettings({ ...settings, aboutStory: e.target.value })}
+                    className="w-full p-3 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] text-xs focus:outline-none focus:border-[#C59B4B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
+                    Philosophy Text
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={settings.aboutPhilosophy}
+                    onChange={(e) => setSettings({ ...settings, aboutPhilosophy: e.target.value })}
+                    className="w-full p-3 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] text-xs focus:outline-none focus:border-[#C59B4B]"
+                  />
+                </div>
+
+                <div className="pt-4 text-right">
+                  <MagneticButton type="submit" variant="primary" reducedMotion={reducedMotion}>
+                    <span>Save Website Content</span>
+                  </MagneticButton>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* TAB 3: REVIEWS MANAGER (STRICT NO MEDICAL CLAIMS) */}
+          {activeTab === 'reviews' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#E8E2D8]">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-[#0F172A]">
+                    Client Reviews Governance
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Approve, reorder, or suppress client reviews. Strict automated filter prohibits claims of curing, diagnosing, or treating disease.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {reviews.map((rev) => (
+                  <div
+                    key={rev.id}
+                    className={`p-5 rounded-2xl border transition-all ${
+                      rev.hasMedicalClaims
+                        ? 'bg-red-50/60 border-red-200'
+                        : rev.isApproved
+                        ? 'bg-[#FAF8F5] border-[#E8E2D8]'
+                        : 'bg-white border-dashed border-[#E8E2D8]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between pb-2 border-b border-[#E8E2D8]/60 text-xs">
+                      <div>
+                        <span className="font-semibold text-[#0F172A]">{rev.clientName}</span>
+                        <span className="text-[#78716C] ml-2">({rev.serviceUsed})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {rev.hasMedicalClaims ? (
+                          <span className="text-[10px] bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded border border-red-300 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            Violates Non-Medical Policy
+                          </span>
+                        ) : (
+                          <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
+                            rev.isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {rev.isApproved ? 'Approved & Public' : 'Pending Review'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-[#0F172A] italic mt-3 font-serif leading-relaxed">
+                      "{rev.quote}"
+                    </p>
+
+                    <div className="mt-4 pt-3 border-t border-[#E8E2D8]/60 flex items-center justify-between text-xs">
+                      <span className="text-[#78716C] font-mono text-[10px]">{rev.date}</span>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleToggleApproveReview(rev.id)}
+                          disabled={rev.hasMedicalClaims}
+                          className={`px-3 py-1.5 rounded-lg font-medium text-xs ${
+                            rev.hasMedicalClaims
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : rev.isApproved
+                              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              : 'bg-[#0F172A] text-white hover:bg-[#1E293B]'
+                          }`}
+                        >
+                          {rev.isApproved ? 'Hide Review' : 'Approve for Public'}
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteReview(rev.id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: SERVICES & PRICING */}
+          {activeTab === 'services' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <h3 className="text-xl font-serif font-bold text-[#0F172A] pb-3 border-b border-[#E8E2D8]">
+                Services, Plans & Pricing Configuration
+              </h3>
+
+              <div className="space-y-6">
+                {services.map((s) => (
+                  <div key={s.id} className="p-6 bg-[#FCFBF9] rounded-2xl border border-[#E8E2D8] space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <span className="font-mono text-xs text-[#A87F32] font-semibold">{s.code}</span>
+                        <h4 className="text-xl font-serif font-bold text-[#0F172A]">{s.name}</h4>
+                        <span className="text-xs text-[#64748B]">Duration: {s.duration}</span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-[#64748B]">Price:</span>
+                          <input
+                            type="number"
+                            value={s.price}
+                            onChange={(e) => handleUpdateServicePrice(s.id, parseInt(e.target.value) || 0)}
+                            className="w-24 p-1.5 rounded-lg border border-[#E8E2D8] bg-white font-mono text-sm font-bold text-right"
+                          />
+                          <span className="font-mono text-xs">USD</span>
+                        </div>
+
+                        <button
+                          onClick={() => handleToggleServiceActive(s.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                            s.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'
+                          }`}
+                        >
+                          {s.isActive ? 'Active' : 'Archived'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-[#526071]">{s.shortDesc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: BOOKINGS & REFUNDS */}
+          {activeTab === 'bookings' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <h3 className="text-xl font-serif font-bold text-[#0F172A] pb-3 border-b border-[#E8E2D8]">
+                Master Booking Roster & Payment Statuses
+              </h3>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#E8E2D8] text-[#78716C] uppercase tracking-wider text-[10px]">
+                      <th className="py-3 px-3">Client</th>
+                      <th className="py-3 px-3">Service</th>
+                      <th className="py-3 px-3">Practitioner</th>
+                      <th className="py-3 px-3">Date/Time</th>
+                      <th className="py-3 px-3">Payment</th>
+                      <th className="py-3 px-3">Session Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E8E2D8]/60">
+                    {bookings.map((b) => (
+                      <tr key={b.id} className="hover:bg-[#FAF8F5]">
+                        <td className="py-3 px-3 font-semibold text-[#0F172A]">{b.clientName}</td>
+                        <td className="py-3 px-3">{b.serviceCode}</td>
+                        <td className="py-3 px-3 text-[#A87F32]">{b.affiliateName}</td>
+                        <td className="py-3 px-3 text-[#64748B] font-mono">{b.date} · {b.timeSlot}</td>
+                        <td className="py-3 px-3">
+                          <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">
+                            ${b.amount} USD {b.paymentStatus}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="font-semibold text-[#0F172A]">{b.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: CLIENTS & ASSIGNMENTS */}
+          {activeTab === 'clients' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <h3 className="text-xl font-serif font-bold text-[#0F172A] pb-3 border-b border-[#E8E2D8]">
+                Client Roster & Practitioner Assignment
+              </h3>
+
+              <div className="space-y-4">
+                {users
+                  .filter((u) => u.role === 'client')
+                  .map((c) => {
+                    const currentAffiliate = users.find((u) => u.id === c.assignedAffiliateId);
+                    return (
+                      <div
+                        key={c.id}
+                        className="p-5 bg-[#FCFBF9] rounded-2xl border border-[#E8E2D8] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
+                      >
+                        <div>
+                          <div className="font-bold text-[#0F172A] text-sm">{c.name}</div>
+                          <div className="text-[#64748B]">{c.email} · {c.phone}</div>
+                          <div className="mt-1 text-[#78716C]">
+                            Birth: {c.birthDate} {c.birthTime} ({c.birthCity}) · Consent: {c.consentGiven && !c.consentWithdrawn ? 'Active' : 'Withdrawn'}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span className="text-[#64748B]">Assigned Practitioner:</span>
+                          <select
+                            value={c.assignedAffiliateId || ''}
+                            onChange={(e) => handleAssignClient(c.id, e.target.value)}
+                            className="p-2 rounded-lg border border-[#E8E2D8] bg-white text-xs"
+                          >
+                            <option value="">Unassigned</option>
+                            {users
+                              .filter((u) => u.role === 'affiliate')
+                              .map((aff) => (
+                                <option key={aff.id} value={aff.id}>
+                                  {aff.name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: AFFILIATES */}
+          {activeTab === 'affiliates' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <h3 className="text-xl font-serif font-bold text-[#0F172A] pb-3 border-b border-[#E8E2D8]">
+                Affiliate Practitioner Management
+              </h3>
+
+              <div className="space-y-4">
+                {users
+                  .filter((u) => u.role === 'affiliate')
+                  .map((aff) => (
+                    <div key={aff.id} className="p-6 bg-[#FCFBF9] rounded-2xl border border-[#E8E2D8] space-y-3 text-xs">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-serif font-bold text-lg text-[#0F172A]">{aff.name}</h4>
+                          <span className="text-[#A87F32] font-medium">{aff.specialty}</span>
+                        </div>
+                        <span className="px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">
+                          Code: {aff.affiliateCode} · Commission: {((aff.commissionRate || 0.2) * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                      <p className="text-[#526071]">{aff.bio}</p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 8: PAYMENTS */}
+          {activeTab === 'payments' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <h3 className="text-xl font-serif font-bold text-[#0F172A] pb-3 border-b border-[#E8E2D8]">
+                Payments & Payout Ledger
+              </h3>
+              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8] flex items-center justify-between text-xs">
+                <span>Total Settled Consultations: <strong>${totalRevenue} USD</strong></span>
+                <span>Affiliate Honoraria Disbursed: <strong>$1,320 USD</strong></span>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 9: ASTROLOGY WORKSPACE (UNRESTRICTED) */}
+          {activeTab === 'astrology' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 shadow-sm flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-[#0F172A]">
+                    Master JHora Astrology Workspace
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Executive inspection of client Sidereal Kundalis with constitutional humor overlays.
+                  </p>
+                </div>
+
+                <select
+                  value={astrologyClientId}
+                  onChange={(e) => setAstrologyClientId(e.target.value)}
+                  className="p-2 rounded-lg border border-[#E8E2D8] bg-[#FAF8F5] text-xs font-semibold"
+                >
+                  {users
+                    .filter((u) => u.role === 'client')
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.birthCity})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {chartRes?.success && chartRes.chart && (
+                <div className="space-y-6">
+                  <InteractiveKundali data={chartRes.chart} reducedMotion={reducedMotion} />
+                  <PlanetaryMatrix
+                    planets={chartRes.chart.planets}
+                    ascendant={chartRes.chart.ascendant}
+                    reducedMotion={reducedMotion}
+                  />
+                  <DashaTransitTimeline data={chartRes.chart} reducedMotion={reducedMotion} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 10: KNOWLEDGE CENTRE */}
+          {activeTab === 'knowledge' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#E8E2D8]">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-[#0F172A]">
+                    Internal Shastric Library & Study Notes
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Study notes, reading templates, and clinical boundary manuals for internal practice use.
+                  </p>
+                </div>
+              </div>
+
+              {/* Add Study Note Form */}
+              <form onSubmit={handleCreateKnowledgeNote} className="p-5 bg-[#FCFBF9] rounded-2xl border border-[#E8E2D8] space-y-3 text-xs">
+                <span className="font-semibold uppercase tracking-wider text-[#A87F32] text-[10px] block">
+                  Add New Study Note
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    placeholder="Treatise or Template Title..."
+                    value={newNoteTitle}
+                    onChange={(e) => setNewNoteTitle(e.target.value)}
+                    className="p-2 rounded-lg border border-[#E8E2D8] bg-white"
+                  />
+                  <select
+                    value={newNoteCategory}
+                    onChange={(e) => setNewNoteCategory(e.target.value as KnowledgeNote['category'])}
+                    className="p-2 rounded-lg border border-[#E8E2D8] bg-white"
+                  >
+                    <option value="Medical Astrology Principles">Medical Astrology Principles</option>
+                    <option value="Reading Templates">Reading Templates</option>
+                    <option value="Ethical Guidelines">Ethical Guidelines</option>
+                    <option value="Cartomancy Synergies">Cartomancy Synergies</option>
+                  </select>
+                </div>
+                <textarea
+                  rows={3}
+                  placeholder="Record your research insights, planetary correlations, or reading script..."
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-[#E8E2D8] bg-white"
+                />
+                <div className="text-right">
+                  <button type="submit" className="px-4 py-2 bg-[#0F172A] text-white rounded-lg font-medium hover:bg-[#1E293B]">
+                    Publish to Knowledge Centre
+                  </button>
+                </div>
+              </form>
+
+              {/* Notes List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {knowledgeNotes.map((kn) => (
+                  <div key={kn.id} className="p-5 bg-[#FAF8F5] rounded-2xl border border-[#E8E2D8] space-y-2 text-xs">
+                    <div className="flex items-center justify-between text-[10px] text-[#A87F32] font-semibold">
+                      <span>{kn.category}</span>
+                      <span className="text-[#94A3B8] font-mono">{kn.updatedAt}</span>
+                    </div>
+                    <h4 className="font-serif font-bold text-base text-[#0F172A]">{kn.title}</h4>
+                    <p className="text-[#526071] leading-relaxed">{kn.content}</p>
+                    <div className="text-[10px] text-[#94A3B8] pt-2 border-t border-[#E8E2D8]/60">
+                      Author: {kn.author}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 11: RESEARCH WORKSPACE (ADMIN-ONLY & DE-IDENTIFIED) */}
+          {activeTab === 'research' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              {/* Mandatory Research Screen Disclaimer */}
+              <div className="p-5 rounded-2xl bg-[#0F172A] text-white border border-[#334155] space-y-2">
+                <div className="flex items-center gap-2 text-[#C59B4B] font-bold text-xs uppercase tracking-wider">
+                  <Activity className="w-4 h-4" />
+                  <span>Research Regulatory Notice</span>
+                </div>
+                <p className="text-xs text-[#CBD5E1] leading-relaxed">
+                  “Research use only. This workspace does not provide medical diagnosis, treatment recommendations, or clinical decision support.”
+                </p>
+              </div>
+
+              {/* Study Protocol Card */}
+              <div className="p-6 bg-[#FAF8F5] rounded-2xl border border-[#E8E2D8] space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] text-[#A87F32] font-semibold">
+                    Protocol: {researchStudy.protocolNumber}
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px]">
+                    Status: {researchStudy.status}
+                  </span>
+                </div>
+                <h4 className="font-serif font-bold text-lg text-[#0F172A]">
+                  {researchStudy.title}
+                </h4>
+                <p className="text-[#526071] leading-relaxed">
+                  <strong>Hypothesis:</strong> {researchStudy.hypothesis}
+                </p>
+                <div className="text-[11px] text-[#78716C] pt-2 border-t border-[#E8E2D8]/60">
+                  Lead Researcher: {researchStudy.leadResearcher} · Sample Size: {researchStudy.sampleSize} participants
+                </div>
+              </div>
+
+              {/* De-identified Participants Table */}
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D8]">
+                  <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                    De-Identified Participant Records ({researchParticipants.filter(p => !p.withdrawn).length} Active)
+                  </h4>
+
+                  <button
+                    onClick={handleExportResearchCSV}
+                    className="px-3 py-1.5 bg-white border border-[#E8E2D8] hover:border-[#C59B4B] text-xs font-medium rounded-lg flex items-center gap-1.5"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#C59B4B]" />
+                    <span>Export Anonymized CSV</span>
+                  </button>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {researchParticipants.map((rp) => (
+                    <div
+                      key={rp.id}
+                      className={`p-4 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                        rp.withdrawn ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-[#FCFBF9] border-[#E8E2D8]'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-[#0F172A]">{rp.deidentifiedId}</span>
+                          <span className="text-[#78716C]">Intake: {rp.intakeDate}</span>
+                          {rp.withdrawn && (
+                            <span className="text-[10px] text-red-700 bg-red-50 border border-red-200 px-1.5 rounded">
+                              Consent Withdrawn
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[#526071] mt-1">
+                          <strong>JHora Variables:</strong> {rp.primaryAstrologicalSignatures.join(', ')}
+                        </div>
+                        <div className="text-[#526071] mt-0.5">
+                          <strong>Outcome:</strong> {rp.verifiedOutcomeCategory} ({rp.outcomeSource})
+                        </div>
+                      </div>
+
+                      {!rp.withdrawn && (
+                        <button
+                          onClick={() => handleWithdrawParticipant(rp.id)}
+                          className="px-2.5 py-1 text-[11px] text-red-700 border border-red-200 hover:bg-red-50 rounded-lg shrink-0"
+                        >
+                          Withdraw Participant
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 12: SECURITY AUDIT LOG */}
+          {activeTab === 'audit' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#E8E2D8]">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-[#0F172A]">
+                    Security Audit & Consent Event Stream
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Immutable chronological record of logins, birth data views, JHora chart generations, and consent revocations.
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search audit trail..."
+                    value={searchAudit}
+                    onChange={(e) => setSearchAudit(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-[#E8E2D8] bg-[#FCFBF9] focus:outline-none focus:border-[#C59B4B]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {filteredLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className={`p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+                      log.isSensitive ? 'bg-[#FAF8F5] border-[#C59B4B]/40' : 'bg-[#FCFBF9] border-[#E8E2D8]'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[10px] font-bold text-[#A87F32]">{log.action}</span>
+                        <span className="font-semibold text-[#0F172A]">{log.actorName} ({log.actorRole})</span>
+                        {log.isSensitive && (
+                          <span className="text-[9px] bg-amber-50 text-amber-900 border border-amber-300 px-1 rounded">
+                            Sensitive
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[#526071] mt-0.5">{log.details}</p>
+                    </div>
+
+                    <div className="text-right text-[10px] text-[#94A3B8] font-mono shrink-0">
+                      <div>{new Date(log.timestamp).toLocaleString()}</div>
+                      <div>IP: {log.ipAddress}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

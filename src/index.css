@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #FAF8F5;
+    --bg-surface: #FFFFFF;
+    --bg-ivory: #FDFBF7;
+    --bg-cream: #F5F1E9;
+    --text-primary: #0F172A;
+    --text-secondary: #526071;
+    --accent-gold: #C59B4B;
+    --accent-gold-light: #DFBF77;
+    --accent-gold-dark: #9F7628;
+    --accent-lilac: #8E7CC3;
+    --accent-rose: #C08497;
+    --border-subtle: #E8E2D8;
+    --border-gold: rgba(197, 155, 75, 0.25);
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: "Cormorant Garamond", Georgia, serif;
+  }
+}
+
+/* Subtle glow animations */
+@keyframes subtlePulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.03); }
+}
+
+@keyframes celestialRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dashDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtlePulse 8s ease-in-out infinite;
+}
+
+.animate-celestial-spin {
+  animation: celestialRotate 120s linear infinite;
+}
+
+.animate-celestial-spin-reverse {
+  animation: celestialRotate 160s linear reverse infinite;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom refined scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF8F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8CFBF;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C59B4B;
+}
