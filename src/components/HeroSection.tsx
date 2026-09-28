@@ -74,7 +74,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               Exact Sidereal Calculations
             </h4>
             <p className="text-xs text-[#64748B] mt-1">
-              JHora & Parashari coordinate algorithms mapping genuine celestial bodies.
+              Parashari astronomical coordinate algorithms mapping genuine celestial bodies.
             </p>
           </div>
 
@@ -98,7 +98,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               Absolute Confidentiality
             </h4>
             <p className="text-xs text-[#64748B] mt-1">
-              Bespoke consultations conducted within a discreet, encrypted haven.
+              Bespoke consultations conducted within a discreet, private contemplation space.
             </p>
           </div>
         </div>

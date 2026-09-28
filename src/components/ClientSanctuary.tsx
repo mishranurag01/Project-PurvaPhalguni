@@ -16,12 +16,10 @@ export const ClientSanctuary: React.FC<ClientSanctuaryProps> = ({ reducedMotion 
   const defaultJournal = `Today's observation: noticing how the Venusian morning hours bring natural clarity to spatial design problems. Less cognitive strain when starting with silence rather than correspondence.`;
 
   useEffect(() => {
-    const saved = localStorage.getItem('purvaphalungi_client_journal');
-    setJournalEntry(saved || defaultJournal);
+    setJournalEntry(defaultJournal);
   }, []);
 
   const handleSaveJournal = () => {
-    localStorage.setItem('purvaphalungi_client_journal', journalEntry);
     setIsSaved(true);
     soundSynth.playSoftTap();
     setTimeout(() => setIsSaved(false), 2000);
@@ -65,7 +63,7 @@ export const ClientSanctuary: React.FC<ClientSanctuaryProps> = ({ reducedMotion 
                 activeTab === 'remedies' ? 'bg-white text-[#0F172A] shadow-sm font-semibold' : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
             >
-              Prescribed Upayas
+              Reflective Upayas
             </button>
             <button
               onClick={() => setActiveTab('journal')}
@@ -131,13 +129,13 @@ export const ClientSanctuary: React.FC<ClientSanctuaryProps> = ({ reducedMotion 
           </div>
         )}
 
-        {/* Tab 2: Prescribed Upayas (Remedies) */}
+        {/* Tab 2: Reflective Upayas (Contemplations) */}
         {activeTab === 'remedies' && (
           <div className="mt-8 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-[#E8E2D8]">
                 <span className="text-xs font-semibold uppercase tracking-wider text-[#A87F32]">
-                  Somatic Remedy
+                  Somatic Contemplation
                 </span>
                 <h4 className="text-base font-serif font-bold text-[#0F172A] mt-1">
                   Morning Venusian Stillness
@@ -186,7 +184,7 @@ export const ClientSanctuary: React.FC<ClientSanctuaryProps> = ({ reducedMotion 
           <div className="mt-8">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs uppercase tracking-wider text-[#78716C] font-semibold">
-                Private Contemplation Stream (Encrypted in Local Storage)
+                Private Contemplation Stream (In-Memory Session)
               </span>
               <MagneticButton
                 variant="primary"

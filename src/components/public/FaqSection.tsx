@@ -24,7 +24,7 @@ export const FaqSection: React.FC = () => {
     },
     {
       q: 'How is my data handled?',
-      a: 'Privacy and data sovereignty are paramount. Your birth records, questions, and notes are encrypted at rest. We never sell, transfer, or commercialize your personal information. You retain the right to withdraw consent or request complete permanent record deletion at any time.'
+      a: 'Privacy and data sovereignty are paramount. In this prototype, demo data is held in temporary browser memory and resets upon refresh. We never sell, transfer, or commercialize your personal information. You retain the right to withdraw consent or clear temporary session records at any time.'
     },
     {
       q: 'Is this medical advice?',

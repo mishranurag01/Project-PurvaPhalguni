@@ -293,7 +293,7 @@ export const PartnerPayoutModal: React.FC<PartnerPayoutModalProps> = ({
           <div className="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200 text-[11px] text-emerald-800 flex items-start gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
             <span>
-              Processing dispatches a live payout receipt to {currentPartner?.name}'s private portal, deducts from your pending liability ledger, and logs an immutable audit stamp.
+              Processing records a demonstration payout receipt to {currentPartner?.name}'s portal, updates the session ledger, and logs an activity record.
             </span>
           </div>
 

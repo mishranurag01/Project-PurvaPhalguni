@@ -10,7 +10,9 @@ import {
   Calendar,
   CheckCircle2,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  PauseCircle,
+  Trash2
 } from 'lucide-react';
 
 interface RemoveAffiliateModalProps {
@@ -29,7 +31,9 @@ export const RemoveAffiliateModal: React.FC<RemoveAffiliateModalProps> = ({
   onRemoved
 }) => {
   const [reassignToId, setReassignToId] = useState<string>('');
-  const [actionType, setActionType] = useState<'suspend' | 'permanent'>('suspend');
+  const [actionType, setActionType] = useState<'deactivate' | 'permanent'>('deactivate');
+  const [deactivationReason, setDeactivationReason] = useState('Sabbatical / Temporary Leave of Absence');
+  const [customReason, setCustomReason] = useState('');
   const [confirmText, setConfirmText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -45,22 +49,32 @@ export const RemoveAffiliateModal: React.FC<RemoveAffiliateModalProps> = ({
     (b) => b.affiliateId === affiliate.id && b.status === 'confirmed'
   );
 
-  const availablePartners = activeAffiliates.filter((a) => a.id !== affiliate.id);
+  const availablePartners = activeAffiliates.filter(
+    (a) => a.id !== affiliate.id && (a.activeStatus === 'active' || !a.activeStatus)
+  );
 
   const handleExecute = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
     if (actionType === 'permanent' && confirmText.trim().toLowerCase() !== affiliate.name.toLowerCase()) {
-      setErrorMsg(`Please type "${affiliate.name}" to verify permanent removal.`);
+      setErrorMsg(`Please type "${affiliate.name}" to confirm permanent removal.`);
       return;
     }
 
-    if (actionType === 'suspend') {
-      // Just toggle activeStatus to 'suspended'
-      PracticeStore.updateAffiliate(affiliate.id, { activeStatus: 'suspended' });
+    const finalReason =
+      deactivationReason === 'Other (Custom reason)'
+        ? customReason.trim() || 'Administrative pause'
+        : deactivationReason;
+
+    if (actionType === 'deactivate') {
+      const res = PracticeStore.deactivateAffiliate(
+        affiliate.id,
+        finalReason,
+        reassignToId || undefined
+      );
       soundSynth.playSoftTap();
-      onRemoved({ success: true, reassignedCount: 0 });
+      onRemoved(res);
       onClose();
       return;
     }
@@ -84,15 +98,15 @@ export const RemoveAffiliateModal: React.FC<RemoveAffiliateModalProps> = ({
         </button>
 
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600">
-            <UserMinus className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+            <PauseCircle className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-xl font-serif font-bold text-[#0F172A]">
-              Manage Partner Status / Remove
+              Deactivate Practitioner Account
             </h3>
             <p className="text-xs text-[#64748B]">
-              Safely deactivate or permanently remove {affiliate.name} from practice.
+              Safely pause or remove {affiliate.name} from active clinical practice.
             </p>
           </div>
         </div>
@@ -117,7 +131,7 @@ export const RemoveAffiliateModal: React.FC<RemoveAffiliateModalProps> = ({
               <Users className="w-4 h-4 text-[#C59B4B]" />
               <div>
                 <div className="font-bold text-[#0F172A]">{assignedClients.length}</div>
-                <div className="text-[10px] text-[#64748B]">Assigned Clients</div>
+                <div className="text-[10px] text-[#64748B]">Active Assigned Clients</div>
               </div>
             </div>
             <div className="p-2.5 rounded-xl bg-white border border-[#E8E2D8] flex items-center gap-2">
@@ -134,21 +148,24 @@ export const RemoveAffiliateModal: React.FC<RemoveAffiliateModalProps> = ({
           {/* Action Choice */}
           <div>
             <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-2 text-[10px]">
-              Select Action Type
+              Select Action
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setActionType('suspend')}
+                onClick={() => setActionType('deactivate')}
                 className={`p-3 rounded-2xl border text-left transition-all ${
-                  actionType === 'suspend'
-                    ? 'border-[#C59B4B] bg-[#FAF3E3]/60 text-[#0F172A] ring-1 ring-[#C59B4B]'
+                  actionType === 'deactivate'
+                    ? 'border-amber-400 bg-amber-50/70 text-[#0F172A] ring-1 ring-amber-400'
                     : 'border-[#E8E2D8] bg-white text-[#64748B] hover:bg-[#FAF8F5]'
                 }`}
               >
-                <div className="font-bold text-xs">Suspend Partner Account</div>
+                <div className="font-bold text-xs text-amber-900 flex items-center gap-1.5">
+                  <PauseCircle className="w-4 h-4 text-amber-700" />
+                  <span>Deactivate / Sabbatical</span>
+                </div>
                 <div className="text-[11px] text-[#78716C] mt-1">
-                  Keeps consultation history and notes intact. Prevents new booking bookings. Can be reactivated anytime.
+                  Pauses active bookings & public listings. Preserves all natal charts and clinical notes. Account can be reactivated with 1 click.
                 </div>
               </button>
 
@@ -161,26 +178,73 @@ export const RemoveAffiliateModal: React.FC<RemoveAffiliateModalProps> = ({
                     : 'border-[#E8E2D8] bg-white text-[#64748B] hover:bg-[#FAF8F5]'
                 }`}
               >
-                <div className="font-bold text-xs text-red-700">Permanent Removal</div>
+                <div className="font-bold text-xs text-red-700 flex items-center gap-1.5">
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                  <span>Permanent Purge</span>
+                </div>
                 <div className="text-[11px] text-[#78716C] mt-1">
-                  Removes partner from roster and reassigns all active clients and bookings to another partner.
+                  Permanently deletes practitioner credentials and safely reassigns all active clients to another partner.
                 </div>
               </button>
             </div>
           </div>
 
-          {/* Reassignment Dropdown (Mandatory or recommended if clients exist) */}
+          {/* Reason for Deactivation */}
+          {actionType === 'deactivate' && (
+            <div className="space-y-2">
+              <label className="block font-semibold uppercase tracking-wider text-[#0F172A] text-[10px]">
+                Reason for Deactivation
+              </label>
+              <select
+                value={deactivationReason}
+                onChange={(e) => setDeactivationReason(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] text-xs focus:outline-none focus:border-[#C59B4B]"
+              >
+                <option value="Sabbatical / Temporary Leave of Absence">
+                  Sabbatical / Temporary Leave of Absence
+                </option>
+                <option value="Scholarly Research & Fieldwork">
+                  Scholarly Research & Fieldwork
+                </option>
+                <option value="Caseload Reached Maximum Capacity">
+                  Caseload Reached Maximum Capacity
+                </option>
+                <option value="Practice Standards Review">
+                  Practice Standards Review
+                </option>
+                <option value="Contract Inactive">Contract Inactive</option>
+                <option value="Other (Custom reason)">Other (Custom reason)...</option>
+              </select>
+
+              {deactivationReason === 'Other (Custom reason)' && (
+                <input
+                  type="text"
+                  required
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                  placeholder="Specify custom reason..."
+                  className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-white text-xs focus:outline-none focus:border-[#C59B4B]"
+                />
+              )}
+            </div>
+          )}
+
+          {/* Reassignment Dropdown if clients exist */}
           {assignedClients.length > 0 && (
             <div className="pt-2">
               <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
-                Reassign {assignedClients.length} Client(s) & Bookings To:
+                Reassign {assignedClients.length} Active Client(s) To:
               </label>
               <select
                 value={reassignToId}
                 onChange={(e) => setReassignToId(e.target.value)}
                 className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] font-medium text-xs focus:outline-none focus:border-[#C59B4B]"
               >
-                <option value="">-- Sanctuary Executive Roster (Unassigned) --</option>
+                <option value="">
+                  {actionType === 'deactivate'
+                    ? '-- Keep assigned to practitioner during pause --'
+                    : '-- Sanctuary Executive Roster (Unassigned) --'}
+                </option>
                 {availablePartners.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} ({p.specialty})
@@ -188,7 +252,9 @@ export const RemoveAffiliateModal: React.FC<RemoveAffiliateModalProps> = ({
                 ))}
               </select>
               <p className="text-[11px] text-[#78716C] mt-1">
-                Clients will immediately be visible in the selected practitioner's private enclave without disruption.
+                {reassignToId
+                  ? 'Selected partner will receive caseload and consultation files immediately.'
+                  : 'Clients will remain associated or route to the Sanctuary Executive triage queue.'}
               </p>
             </div>
           )}
@@ -221,12 +287,12 @@ export const RemoveAffiliateModal: React.FC<RemoveAffiliateModalProps> = ({
               className={`px-5 py-2 rounded-xl text-xs font-bold text-white transition-colors flex items-center gap-2 ${
                 actionType === 'permanent'
                   ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-[#0F172A] hover:bg-[#C59B4B] hover:text-[#0F172A]'
+                  : 'bg-amber-800 hover:bg-amber-900'
               }`}
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>
-                {actionType === 'permanent' ? 'Execute Permanent Removal' : 'Confirm Suspension'}
+                {actionType === 'permanent' ? 'Execute Permanent Purge' : 'Confirm Account Deactivation'}
               </span>
             </button>
           </div>

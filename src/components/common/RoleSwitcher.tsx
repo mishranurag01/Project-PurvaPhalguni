@@ -22,13 +22,13 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({ currentRole, onRoleC
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-[#94A3B8] font-mono uppercase tracking-wider text-[11px]">
-            Security & RBAC Environment:
+            Simulation Environment (Demo):
           </span>
           <span className="text-white font-medium bg-[#1E293B] px-2 py-0.5 rounded border border-white/10 font-mono">
             {currentRole === 'public' && 'Public Website'}
-            {currentRole === 'client' && 'Client Portal (Elena Vance)'}
-            {currentRole === 'affiliate' && 'Affiliate Portal (Dr. Julian Croft)'}
-            {currentRole === 'admin' && 'Admin Executive Suite (Director)'}
+            {currentRole === 'client' && 'Client Portal (Demo Client)'}
+            {currentRole === 'affiliate' && 'Affiliate Portal (Demo Affiliate)'}
+            {currentRole === 'admin' && 'Admin Suite (Demo Admin)'}
           </span>
         </div>
 

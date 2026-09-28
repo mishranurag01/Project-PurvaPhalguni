@@ -12,7 +12,7 @@ export const HowItWorksSection: React.FC = () => {
     {
       num: '02',
       title: 'Select Date & Time',
-      desc: 'Pick your preferred private session window from our encrypted calendar across worldwide timezones.',
+      desc: 'Pick your preferred private session window from our practice calendar across worldwide timezones.',
       icon: Calendar
     },
     {
@@ -24,7 +24,7 @@ export const HowItWorksSection: React.FC = () => {
     {
       num: '04',
       title: 'Pay & Confirm',
-      desc: 'Complete secure payment and receive an instant calendar invitation (.ics) with your private encrypted video sanctuary link.',
+      desc: 'Confirm your session and receive an instant calendar invitation (.ics) with your private video sanctuary link.',
       icon: CreditCard
     },
     {

@@ -16,7 +16,8 @@ import {
   ArrowLeft,
   HeartPulse,
   MapPin,
-  Lock
+  Lock,
+  AlertCircle
 } from 'lucide-react';
 import { soundSynth } from '../../utils/soundAmbience';
 
@@ -48,17 +49,17 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   const [bookingDate, setBookingDate] = useState<string>('2026-10-18');
   const [bookingTime, setBookingTime] = useState<string>('14:00 GMT');
 
-  // Account / Client info
-  const [clientName, setClientName] = useState<string>('Elena Vance');
-  const [clientEmail, setClientEmail] = useState<string>('elena.vance@studio.org');
-  const [clientPhone, setClientPhone] = useState<string>('+1 (415) 778-9011');
+  // Account / Client info (Fictional Demo Defaults)
+  const [clientName, setClientName] = useState<string>('Demo Client');
+  const [clientEmail, setClientEmail] = useState<string>('demo.client@example.com');
+  const [clientPhone, setClientPhone] = useState<string>('+1 (555) 010-0099');
 
-  // Birth details
-  const [birthDate, setBirthDate] = useState<string>('1992-08-28');
-  const [birthTime, setBirthTime] = useState<string>('06:14');
-  const [birthCity, setBirthCity] = useState<string>('Kyoto, Japan');
-  const [birthLat, setBirthLat] = useState<number>(35.0116);
-  const [birthLon, setBirthLon] = useState<number>(135.7681);
+  // Birth details (Fictional Demo Coordinates)
+  const [birthDate, setBirthDate] = useState<string>('2000-01-01');
+  const [birthTime, setBirthTime] = useState<string>('12:00');
+  const [birthCity, setBirthCity] = useState<string>('Example City');
+  const [birthLat, setBirthLat] = useState<number>(37.7749);
+  const [birthLon, setBirthLon] = useState<number>(-122.4194);
 
   // Question/Intention
   const [clientIntention, setClientIntention] = useState<string>(
@@ -69,10 +70,10 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   const [consentAcknowledged, setConsentAcknowledged] = useState<boolean>(false);
   const [nonMedicalConfirmed, setNonMedicalConfirmed] = useState<boolean>(false);
 
-  // Payment mock
-  const [cardNumber, setCardNumber] = useState<string>('•••• •••• •••• 4242');
-  const [cardExp, setCardExp] = useState<string>('08/29');
-  const [cardCvc, setCardCvc] = useState<string>('842');
+  // Payment mock (Fictional Demo Placeholders)
+  const [cardNumber, setCardNumber] = useState<string>('0000 0000 0000 0000');
+  const [cardExp, setCardExp] = useState<string>('00/00');
+  const [cardCvc, setCardCvc] = useState<string>('000');
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
 
   // Completed booking reference
@@ -129,7 +130,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
           version: 'v2.4',
           disclaimerAcknowledged: true
         },
-        meetingUrl: `https://sanctuary.practice.org/room/room-${Date.now()}`,
+        meetingUrl: `https://example.com/demo-sanctuary-room-${Date.now()}`,
         hasSummaryShared: false,
         createdAt: new Date().toISOString()
       };
@@ -205,6 +206,12 @@ END:VCALENDAR`;
               }`}
             />
           ))}
+        </div>
+
+        {/* Prototype Warning Banner */}
+        <div className="mt-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+          <span><strong>Prototype mode:</strong> do not enter real personal, birth, health, or payment information. All demo data is held in temporary memory.</span>
         </div>
       </div>
 
@@ -313,7 +320,7 @@ END:VCALENDAR`;
               3. Select Date & Time Slot
             </h3>
             <p className="text-xs sm:text-sm text-[#526071]">
-              Consultations are conducted in our encrypted private video sanctuary. Choose your preferred arrival time.
+              Consultations are conducted in our private video sanctuary. Choose your preferred arrival time.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
@@ -373,7 +380,7 @@ END:VCALENDAR`;
               4. Create Your Account or Sign In
             </h3>
             <p className="text-xs sm:text-sm text-[#526071]">
-              Your encrypted portal credentials will archive your consultation recordings and shared reading summaries.
+              Your demonstration account will store temporary consultation summaries for this browser session.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -445,7 +452,7 @@ END:VCALENDAR`;
               5. Enter Exact Birth Coordinates
             </h3>
             <p className="text-xs sm:text-sm text-[#526071]">
-              Required for JHora Lahiri sidereal ephemeris calculation. Please reference your birth certificate for exact minute.
+              Required for Sidereal Lahiri astronomical ephemeris calculation. Please reference your birth certificate for exact minute.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
@@ -573,7 +580,7 @@ END:VCALENDAR`;
                   className="mt-0.5 rounded border-[#E8E2D8] text-[#C59B4B] focus:ring-[#C59B4B]"
                 />
                 <span>
-                  I give consent for my birth details to be calculated via the secure Sidereal Lahiri JHora engine and stored in my encrypted client dossier. I retain the right to withdraw consent at any time.
+                  I give consent for my birth details to be calculated via the Sidereal Lahiri astronomical engine and stored in my client sanctuary. I retain the right to withdraw consent at any time.
                 </span>
               </label>
             </div>
@@ -605,7 +612,7 @@ END:VCALENDAR`;
                 <h3 className="text-xl font-serif font-bold text-[#0F172A]">
                   8. Complete Payment
                 </h3>
-                <p className="text-xs text-[#64748B]">Secure 256-bit encrypted checkout.</p>
+                <p className="text-xs text-[#64748B]">Demonstration checkout — no real payment card is charged.</p>
               </div>
               <div className="text-right">
                 <span className="text-xs text-[#78716C]">Total Due:</span>
@@ -686,7 +693,7 @@ END:VCALENDAR`;
                 reducedMotion={reducedMotion}
               >
                 <Lock className="w-3.5 h-3.5" />
-                <span>{isProcessingPayment ? 'Securing Transaction...' : `Pay $${selectedService.price} USD`}</span>
+                <span>{isProcessingPayment ? 'Recording Demo Booking...' : `Complete Demo Booking ($${selectedService.price} USD)`}</span>
               </MagneticButton>
             </div>
           </div>

@@ -15,6 +15,8 @@ import { InteractiveKundali } from '../InteractiveKundali';
 import { PlanetaryMatrix } from '../PlanetaryMatrix';
 import { DashaTransitTimeline } from '../DashaTransitTimeline';
 import { MagneticButton } from '../MagneticButton';
+import { NotAuthenticated } from '../common/NotAuthenticated';
+import { PermissionDenied } from '../common/PermissionDenied';
 import {
   Users,
   Calendar,
@@ -54,6 +56,27 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
   onExitPortal,
   reducedMotion = false
 }) => {
+  if (!affiliate) {
+    return (
+      <NotAuthenticated
+        requiredPortalName="Affiliate Practitioner Desk"
+        onSignIn={onExitPortal}
+        onReturnHome={onExitPortal}
+      />
+    );
+  }
+
+  if (affiliate.activeStatus === 'deactivated') {
+    return (
+      <PermissionDenied
+        requiredRoleName="Active Practitioners"
+        customMessage="This affiliate account is currently deactivated or on sabbatical."
+        onReturnHome={onExitPortal}
+        onSwitchAccount={onExitPortal}
+      />
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<'dashboard' | 'clients' | 'calendar' | 'messages' | 'astrology' | 'referrals' | 'profile'>('dashboard');
 
   // Assigned Clients only
@@ -417,7 +440,7 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
             }`}
           >
             <Sparkles className="w-4 h-4 text-[#C59B4B]" />
-            <span>JHora Astrology Workspace</span>
+            <span>Astrology Workspace</span>
           </button>
 
           <button
@@ -659,7 +682,7 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
                         }}
                         className="px-3 py-1.5 bg-[#0F172A] text-white rounded-lg text-xs font-medium hover:bg-[#1E293B]"
                       >
-                        Launch JHora Workspace
+                        Launch Astrology Workspace
                       </button>
                     </div>
                   ))}
@@ -747,15 +770,21 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: ASTROLOGY WORKSPACE (JHORA API ENGINE) */}
+          {/* TAB 3: ASTROLOGY WORKSPACE (LOCAL CALCULATION ENGINE) */}
           {activeTab === 'astrology' && selectedClient && (
             <div className="space-y-6">
               {/* Workspace Header */}
               <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-[#C59B4B] font-semibold">
-                    JHora Sidereal Calculation Desk
-                  </span>
+                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-mono text-amber-800 mb-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <span>Demo chart engine — external provider not connected</span>
+                  </div>
+                  <div>
+                    <span className="text-xs uppercase tracking-wider text-[#C59B4B] font-semibold">
+                      Sidereal Calculation Desk (AstrologyCalculationProvider)
+                    </span>
+                  </div>
                   <h3 className="text-2xl font-serif font-bold text-[#0F172A] mt-0.5">
                     {selectedClient.name} · {selectedClient.birthCity}
                   </h3>
@@ -857,7 +886,7 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
                 <div className="bg-white rounded-3xl border border-red-200 p-8 text-center text-xs text-red-700 space-y-2">
                   <ShieldAlert className="w-8 h-8 mx-auto text-red-500" />
                   <h4 className="text-base font-serif font-bold text-red-900">
-                    JHora Calculation Restricted
+                    Astrology Calculation Restricted
                   </h4>
                   <p>{chartCalculation?.error || 'Unable to generate chart.'}</p>
                 </div>
@@ -872,7 +901,7 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
                       Private Practitioner Notes
                     </h4>
                     <p className="text-[11px] text-[#78716C]">
-                      These clinical observations are strictly internal and NEVER visible to the client.
+                      These reflective observations are strictly internal and temporary for this session.
                     </p>
                   </div>
                   <span className="text-[10px] text-red-800 bg-red-50 border border-red-200 px-2 py-0.5 rounded font-mono">

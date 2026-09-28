@@ -121,8 +121,8 @@ export const PracticeBroadcastModal: React.FC<PracticeBroadcastModalProps> = ({
                 onChange={(e) => setPriority(e.target.value as BulletinPriority)}
                 className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] font-medium text-xs focus:outline-none focus:border-[#C59B4B]"
               >
-                <option value="protocol">Clinical & Ethical Protocol (Standard)</option>
-                <option value="urgent">Urgent Compliance Notice (Red Priority)</option>
+                <option value="protocol">Ethical Practice Protocol (Standard)</option>
+                <option value="urgent">Urgent Ethical Standards Notice (Red Priority)</option>
                 <option value="scheduling">Sanctuary Scheduling & Calendar Shifts</option>
                 <option value="payout">Honoraria & Disbursement Announcement</option>
                 <option value="general">General Practice Announcement</option>

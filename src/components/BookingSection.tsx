@@ -209,7 +209,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ reducedMotion = 
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Dr. Julian Croft"
+                      placeholder="e.g. Demo Client"
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D8] focus:border-[#C59B4B] focus:outline-none bg-[#FCFBF9]"
@@ -223,7 +223,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ reducedMotion = 
                     <input
                       type="email"
                       required
-                      placeholder="e.g. julian@studio.ch"
+                      placeholder="e.g. demo.client@example.com"
                       value={clientEmail}
                       onChange={(e) => setClientEmail(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D8] focus:border-[#C59B4B] focus:outline-none bg-[#FCFBF9]"
@@ -328,7 +328,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ reducedMotion = 
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#64748B]">Delivery:</span>
-                    <span className="text-[#A87F32] font-medium">Private Encrypted Video Sanctuary</span>
+                    <span className="text-[#A87F32] font-medium">Private Video Sanctuary (Prototype Session)</span>
                   </div>
                 </div>
 

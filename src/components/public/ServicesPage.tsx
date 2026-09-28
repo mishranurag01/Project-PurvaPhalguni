@@ -118,11 +118,11 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
                   <div className="mt-4 space-y-2 text-[11px] text-[#64748B]">
                     <div className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span>Encrypted Video Sanctuary & Recording</span>
+                      <span>Private Video Sanctuary & Consultation</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span>Permanent Reading Summary in Client Portal</span>
+                      <span>Reading Summary Folio in Client Portal</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />

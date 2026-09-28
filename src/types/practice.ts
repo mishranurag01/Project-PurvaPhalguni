@@ -1,5 +1,79 @@
 export type UserRole = 'public' | 'client' | 'affiliate' | 'admin';
 
+export type PractitionerRoleTier =
+  | 'senior_astrologer'
+  | 'associate_astrologer'
+  | 'cartomancy_specialist'
+  | 'apprentice_fellow';
+
+export interface PractitionerPermissions {
+  canAccessJHoraEngine: boolean; // Access to local sidereal chart calculation engine
+  canSuggestRemedies: boolean; // Formulate reflective contemplations, gemstone color symbolism & daily pacing
+  canDirectMessageClients: boolean; // Asynchronous direct messaging with assigned clients
+  canExportClientCharts: boolean; // Export birth data and transit matrices as printable PDF folios
+  canPublishToSanctuaryNotes: boolean; // Contribute to the shared knowledge base / research repository
+  canViewUnassignedQueue: boolean; // View & claim incoming prospective clients from intake triage
+  canModifyConsultationFees: boolean; // Custom session add-ons or client fee concessions
+  requireAdminSummaryReview: boolean; // Flag to require Admin sign-off before summary delivery
+}
+
+export const ROLE_PERMISSION_DEFAULTS: Record<PractitionerRoleTier, PractitionerPermissions> = {
+  senior_astrologer: {
+    canAccessJHoraEngine: true,
+    canSuggestRemedies: true,
+    canDirectMessageClients: true,
+    canExportClientCharts: true,
+    canPublishToSanctuaryNotes: true,
+    canViewUnassignedQueue: true,
+    canModifyConsultationFees: true,
+    requireAdminSummaryReview: false
+  },
+  associate_astrologer: {
+    canAccessJHoraEngine: true,
+    canSuggestRemedies: true,
+    canDirectMessageClients: true,
+    canExportClientCharts: true,
+    canPublishToSanctuaryNotes: true,
+    canViewUnassignedQueue: false,
+    canModifyConsultationFees: false,
+    requireAdminSummaryReview: false
+  },
+  cartomancy_specialist: {
+    canAccessJHoraEngine: false,
+    canSuggestRemedies: true,
+    canDirectMessageClients: true,
+    canExportClientCharts: true,
+    canPublishToSanctuaryNotes: true,
+    canViewUnassignedQueue: false,
+    canModifyConsultationFees: false,
+    requireAdminSummaryReview: false
+  },
+  apprentice_fellow: {
+    canAccessJHoraEngine: true,
+    canSuggestRemedies: false,
+    canDirectMessageClients: true,
+    canExportClientCharts: false,
+    canPublishToSanctuaryNotes: false,
+    canViewUnassignedQueue: false,
+    canModifyConsultationFees: false,
+    requireAdminSummaryReview: true
+  }
+};
+
+export const PRACTITIONER_ROLE_LABELS: Record<PractitionerRoleTier, string> = {
+  senior_astrologer: 'Senior Medical Astrologer',
+  associate_astrologer: 'Associate Astrologer',
+  cartomancy_specialist: 'Cartomancy & Archetype Specialist',
+  apprentice_fellow: 'Apprentice Fellow'
+};
+
+export const PRACTITIONER_ROLE_DESCRIPTIONS: Record<PractitionerRoleTier, string> = {
+  senior_astrologer: 'Senior authority over sidereal analysis, constitutional temperaments, and intake queue triage.',
+  associate_astrologer: 'Authorized for local Vedic charting, reflective contemplations, and independent consultation delivery.',
+  cartomancy_specialist: 'Specializes in archetypal mapping, tarot temperament layouts, and elemental contemplations.',
+  apprentice_fellow: 'Supervised residency with pre-delivery admin review on all client reading summaries.'
+};
+
 export type PayoutMethod = 'bank_wire' | 'wise' | 'stripe' | 'paypal' | 'crypto' | 'check';
 
 export interface PartnerPayout {
@@ -58,7 +132,11 @@ export interface UserProfile {
   commissionRate?: number; // e.g. 0.20
   specialty?: string;
   bio?: string;
-  activeStatus?: 'active' | 'pending' | 'suspended';
+  activeStatus?: 'active' | 'pending' | 'suspended' | 'deactivated';
+  practitionerRole?: PractitionerRoleTier;
+  permissions?: PractitionerPermissions;
+  deactivationReason?: string;
+  deactivatedAt?: string;
   payoutMethodPreference?: PayoutMethod;
   payoutAccountDetails?: string;
   workCapacity?: string;
@@ -234,6 +312,9 @@ export interface AuditLogEntry {
     | 'AFFILIATE_ADDED'
     | 'AFFILIATE_REMOVED'
     | 'AFFILIATE_STATUS_CHANGED'
+    | 'AFFILIATE_PERMISSIONS_UPDATED'
+    | 'AFFILIATE_DEACTIVATED'
+    | 'AFFILIATE_REACTIVATED'
     | 'PAYOUT_DISBURSED'
     | 'BULLETIN_PUBLISHED';
   details: string;

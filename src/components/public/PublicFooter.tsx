@@ -4,13 +4,13 @@ import { Sparkles, Shield, HeartPulse, Lock, Mail, Phone, MapPin, X } from 'luci
 
 interface PublicFooterProps {
   settings: WebsiteSettings;
-  onOpenPortal: (role: UserRole) => void;
+  onOpenSignIn: () => void;
   onNavigate: (tab: 'home' | 'services' | 'about' | 'booking') => void;
 }
 
 export const PublicFooter: React.FC<PublicFooterProps> = ({
   settings,
-  onOpenPortal,
+  onOpenSignIn,
   onNavigate
 }) => {
   const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'consent' | 'disclaimer' | null>(null);
@@ -92,28 +92,17 @@ export const PublicFooter: React.FC<PublicFooterProps> = ({
               </div>
             </div>
 
-            <div className="pt-2 border-t border-[#1E293B] space-y-1 text-xs">
+            <div className="pt-2 border-t border-[#1E293B] space-y-2 text-xs">
               <span className="text-[10px] uppercase tracking-wider text-[#64748B] block font-mono">
-                Secure Portals:
+                Practice Access:
               </span>
-              <div className="flex flex-wrap gap-2 pt-1">
+              <div>
                 <button
-                  onClick={() => onOpenPortal('client')}
-                  className="px-2.5 py-1 rounded bg-[#1E293B] text-white hover:bg-[#334155] text-[11px] transition-colors"
+                  onClick={onOpenSignIn}
+                  className="px-3 py-1.5 rounded-lg bg-[#1E293B] text-white hover:bg-[#334155] text-xs transition-colors inline-flex items-center gap-1.5 border border-white/10"
                 >
-                  Client Portal
-                </button>
-                <button
-                  onClick={() => onOpenPortal('affiliate')}
-                  className="px-2.5 py-1 rounded bg-[#1E293B] text-white hover:bg-[#334155] text-[11px] transition-colors"
-                >
-                  Affiliate
-                </button>
-                <button
-                  onClick={() => onOpenPortal('admin')}
-                  className="px-2.5 py-1 rounded bg-[#1E293B] text-[#C59B4B] hover:bg-[#334155] text-[11px] transition-colors font-semibold"
-                >
-                  Admin
+                  <Lock className="w-3 h-3 text-[#C59B4B]" />
+                  <span>Portal Sign In</span>
                 </button>
               </div>
             </div>

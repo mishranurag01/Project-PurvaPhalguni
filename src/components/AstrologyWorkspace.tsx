@@ -14,22 +14,22 @@ interface AstrologyWorkspaceProps {
 }
 
 export const AstrologyWorkspace: React.FC<AstrologyWorkspaceProps> = ({ reducedMotion = false }) => {
-  const [selectedProfileId, setSelectedProfileId] = useState<string>('elena-vance');
+  const [selectedProfileId, setSelectedProfileId] = useState<string>('demo-client-1');
   const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
 
-  // Custom Form State
-  const [customName, setCustomName] = useState('Siddharth Sen');
-  const [customTitle, setCustomTitle] = useState('Design Theorist & Founder');
-  const [customDate, setCustomDate] = useState('1990-10-24');
-  const [customTime, setCustomTime] = useState('08:30');
-  const [customCity, setCustomCity] = useState('Florence, Italy');
-  const [customLat, setCustomLat] = useState('43.7696');
-  const [customLon, setCustomLon] = useState('11.2558');
+  // Custom Form State (Demo Placeholders)
+  const [customName, setCustomName] = useState('Demo Subject');
+  const [customTitle, setCustomTitle] = useState('Reflective Inquiry Profile (Demo)');
+  const [customDate, setCustomDate] = useState('2000-01-01');
+  const [customTime, setCustomTime] = useState('12:00');
+  const [customCity, setCustomCity] = useState('Example City');
+  const [customLat, setCustomLat] = useState('37.7749');
+  const [customLon, setCustomLon] = useState('-122.4194');
 
   // Currently active calculated chart data
   const [chartData, setChartData] = useState<ChartCalculationResult>(() => {
-    const initialProfile = PRESET_PROFILES.find((p) => p.id === 'elena-vance') || PRESET_PROFILES[0];
+    const initialProfile = PRESET_PROFILES.find((p) => p.id === 'demo-client-1') || PRESET_PROFILES[0];
     return calculateVedicChart(initialProfile);
   });
 
@@ -71,14 +71,20 @@ export const AstrologyWorkspace: React.FC<AstrologyWorkspaceProps> = ({ reducedM
     <section id="workspace" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
       {/* Section Header */}
       <div className="text-center max-w-3xl mx-auto mb-12">
-        <span className="text-xs uppercase tracking-widest text-[#C59B4B] font-semibold">
-          JHora & Parashari Engine
-        </span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-[11px] font-mono text-amber-800 mb-3">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          <span>Demo chart engine — external provider not connected</span>
+        </div>
+        <div>
+          <span className="text-xs uppercase tracking-widest text-[#C59B4B] font-semibold">
+            Local Vedic Astronomical Engine
+          </span>
+        </div>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-normal text-[#0F172A] mt-2">
           The Sidereal Astrology Workspace
         </h2>
         <p className="text-sm sm:text-base text-[#526071] mt-3 leading-relaxed">
-          Interactive Vedic kundali calculations utilizing Sidereal Lahiri Ayanamsa, 12 Bhava divisions, full 27 Nakshatra padas, and the 120-year Vimshottari Dasha sequence.
+          Interactive Vedic kundali calculations utilizing Sidereal Lahiri Ayanamsa, 12 Bhava divisions, full 27 Nakshatra padas, and the 120-year Vimshottari Dasha sequence. Calculated locally via AstrologyCalculationProvider.
         </p>
       </div>
 

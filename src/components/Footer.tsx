@@ -89,7 +89,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavClick }) => {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748B] gap-4">
           <p>© {new Date().getFullYear()} PurvaPhalungi Celestial Sanctuary. All rights reserved.</p>
           <div className="flex items-center gap-4 text-[11px]">
-            <span>Confidentiality Encrypted</span>
+            <span>Private Client Enclave (Demo)</span>
             <span>·</span>
             <span>Parashari Jyotish Standard</span>
             <span>·</span>

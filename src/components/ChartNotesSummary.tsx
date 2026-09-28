@@ -12,29 +12,24 @@ export const ChartNotesSummary: React.FC<ChartNotesSummaryProps> = ({
   data,
   reducedMotion = false
 }) => {
-  const storageKey = `purvaphalungi_notes_${data.profile.id}`;
+  // In-memory temporary notes for the active session (cleared on refresh)
   const [notes, setNotes] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      setNotes(saved);
-    } else {
-      // Default contemplative reflection prompt
-      setNotes(
-        `• Core Orientation: ${data.ascendant.sign} Lagna (${data.ascendant.nakshatra} Pada ${data.ascendant.pada})\n` +
-        `• Planetary Luminary: Moon in ${data.planets.find(p => p.name === 'Moon')?.sign} with Nakshatra lord ${data.planets.find(p => p.name === 'Moon')?.nakshatraLord}.\n` +
-        `• Active Chronos: ${data.currentDasha.mahadasha} / ${data.currentDasha.antardasha} period.\n` +
-        `• Contemplative Reflection: Deepen devotional rest during Venusian hours; harmonize creative tension through disciplined architecture.`
-      );
-    }
-  }, [storageKey, data]);
+    // Default contemplative reflection prompt for session
+    setNotes(
+      `• Core Orientation: ${data.ascendant.sign} Lagna (${data.ascendant.nakshatra} Pada ${data.ascendant.pada})\n` +
+      `• Planetary Luminary: Moon in ${data.planets.find(p => p.name === 'Moon')?.sign} with Nakshatra lord ${data.planets.find(p => p.name === 'Moon')?.nakshatraLord}.\n` +
+      `• Active Chronos: ${data.currentDasha.mahadasha} / ${data.currentDasha.antardasha} period.\n` +
+      `• Contemplative Reflection: Deepen devotional rest during Venusian hours; harmonize creative tension through disciplined architecture.`
+    );
+  }, [data]);
 
   const handleSave = () => {
-    localStorage.setItem(storageKey, notes);
+    // In-memory save for prototype session
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2500);
   };

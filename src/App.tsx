@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { UserRole, WebsiteSettings, ServicePlan, UserProfile } from './types/practice';
 import { PracticeStore } from './services/store';
-import { RoleSwitcher } from './components/common/RoleSwitcher';
+import { DevRolePreview } from './components/common/DevRolePreview';
+import { SignInModal } from './components/public/SignInModal';
 import { PublicHeader } from './components/public/PublicHeader';
 import { HeroSection } from './components/public/HeroSection';
 import { AboutSection } from './components/public/AboutSection';
@@ -28,6 +29,8 @@ export default function App() {
   const [reviews, setReviews] = useState(() => PracticeStore.getReviews());
   const [preselectedService, setPreselectedService] = useState<ServicePlan | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [isSignInOpen, setIsSignInOpen] = useState(false);
+  const [signInRoleChoice, setSignInRoleChoice] = useState<'client' | 'affiliate' | 'admin'>('client');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -69,12 +72,6 @@ export default function App() {
       {/* Subtle Celestial Geometry Backdrop */}
       <CelestialBackdrop reducedMotion={reducedMotion} />
 
-      {/* Top Universal Role Switcher Bar */}
-      <RoleSwitcher
-        currentRole={currentRole}
-        onRoleChange={handleRoleChange}
-      />
-
       {/* 1. PUBLIC WEBSITE EXPERIENCE */}
       {currentRole === 'public' && (
         <div className="relative z-10 flex flex-col min-h-screen">
@@ -85,7 +82,10 @@ export default function App() {
               setPublicTab(tab);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            onOpenPortal={(role) => setCurrentRole(role)}
+            onOpenSignIn={() => {
+              setSignInRoleChoice('client');
+              setIsSignInOpen(true);
+            }}
             reducedMotion={reducedMotion}
           />
 
@@ -168,7 +168,10 @@ export default function App() {
           {/* 7. Footer */}
           <PublicFooter
             settings={settings}
-            onOpenPortal={(role) => setCurrentRole(role)}
+            onOpenSignIn={() => {
+              setSignInRoleChoice('client');
+              setIsSignInOpen(true);
+            }}
             onNavigate={(tab) => {
               setPublicTab(tab);
               window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -213,6 +216,22 @@ export default function App() {
           />
         </div>
       )}
+
+      {/* Demonstration Authentication Screen (Modal with Client / Affiliate / Admin choices) */}
+      <SignInModal
+        isOpen={isSignInOpen}
+        onClose={() => setIsSignInOpen(false)}
+        initialRoleChoice={signInRoleChoice}
+        onSuccess={(role) => {
+          handleRoleChange(role);
+        }}
+      />
+
+      {/* Fixed bottom-corner development-only role preview switcher (active only when VITE_DEMO_MODE=true) */}
+      <DevRolePreview
+        currentRole={currentRole}
+        onRoleChange={handleRoleChange}
+      />
     </div>
   );
 }

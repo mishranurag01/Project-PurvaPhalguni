@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { UserProfile, PayoutMethod } from '../../types/practice';
+import {
+  UserProfile,
+  PayoutMethod,
+  PractitionerRoleTier,
+  PractitionerPermissions,
+  ROLE_PERMISSION_DEFAULTS,
+  PRACTITIONER_ROLE_LABELS,
+  PRACTITIONER_ROLE_DESCRIPTIONS
+} from '../../types/practice';
 import { PracticeStore } from '../../services/store';
 import { soundSynth } from '../../utils/soundAmbience';
 import {
@@ -11,7 +19,11 @@ import {
   Mail,
   Phone,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Lock,
+  Sliders,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface AddAffiliateModalProps {
@@ -37,12 +49,18 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
   const [workCapacity, setWorkCapacity] = useState('8 sessions / week');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Role Tier & Role-Based Permissions
+  const [roleTier, setRoleTier] = useState<PractitionerRoleTier>('associate_astrologer');
+  const [permissions, setPermissions] = useState<PractitionerPermissions>({
+    ...ROLE_PERMISSION_DEFAULTS.associate_astrologer
+  });
+  const [showCustomPermissions, setShowCustomPermissions] = useState(false);
+
   if (!isOpen) return null;
 
   const handleNameChange = (val: string) => {
     setName(val);
     if (!affiliateCode) {
-      // Suggest code based on name
       const code = val
         .replace(/[^a-zA-Z]/g, '')
         .toUpperCase()
@@ -51,12 +69,25 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
     }
   };
 
+  const handleRoleChange = (newTier: PractitionerRoleTier) => {
+    setRoleTier(newTier);
+    setPermissions({ ...ROLE_PERMISSION_DEFAULTS[newTier] });
+    soundSynth.playSoftTap();
+  };
+
+  const togglePermission = (key: keyof PractitionerPermissions) => {
+    setPermissions((prev) => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
     if (!name.trim()) {
-      setErrorMsg('Please specify the partner practitioner\'s full name.');
+      setErrorMsg('Please specify the partner practitioner\'s full legal or professional name.');
       return;
     }
     if (!email.trim() || !email.includes('@')) {
@@ -79,6 +110,8 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
       affiliateCode: affiliateCode.trim().toUpperCase(),
       commissionRate: rate,
       activeStatus: 'active',
+      practitionerRole: roleTier,
+      permissions,
       payoutMethodPreference: payoutMethod,
       payoutAccountDetails: payoutDetails.trim() || `${email.trim()} (${payoutMethod})`,
       workCapacity: workCapacity.trim()
@@ -91,7 +124,7 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl border border-[#E8E2D8] max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl border border-[#E8E2D8] max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute top-5 right-5 p-2 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-[#FAF8F5] transition-colors"
@@ -106,10 +139,10 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
           </div>
           <div>
             <h3 className="text-xl font-serif font-bold text-[#0F172A]">
-              Add New Affiliate Partner
+              Add New Affiliate Practitioner
             </h3>
             <p className="text-xs text-[#64748B]">
-              Onboard a licensed Medical Astrologer or Cartomancer to your practice roster.
+              Onboard a practitioner and configure practice scope and role-based permissions.
             </p>
           </div>
         </div>
@@ -121,6 +154,7 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-xs">
+          {/* Identity Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
@@ -131,7 +165,7 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
                 required
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="e.g. Dr. Helena Rostova"
+                placeholder="e.g. Demo Practitioner"
                 className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] focus:outline-none focus:border-[#C59B4B]"
               />
             </div>
@@ -145,7 +179,7 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. helena.rostova@practice.org"
+                placeholder="e.g. demo.practitioner@example.com"
                 className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] focus:outline-none focus:border-[#C59B4B]"
               />
             </div>
@@ -160,7 +194,7 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 (415) 555-0182"
+                placeholder="+1 (555) 010-0000"
                 className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] focus:outline-none focus:border-[#C59B4B]"
               />
             </div>
@@ -180,6 +214,167 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
             </div>
           </div>
 
+          {/* ROLE-BASED PERMISSION SETTINGS */}
+          <div className="pt-3 border-t border-[#E8E2D8] space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block font-semibold uppercase tracking-wider text-[#0F172A] text-[10px]">
+                  Practitioner Role Tier & Clinical Authority *
+                </label>
+                <p className="text-[11px] text-[#64748B]">
+                  Sets default operational and clinical permissions across the practice.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCustomPermissions(!showCustomPermissions)}
+                className="text-[11px] text-[#C59B4B] font-semibold hover:underline flex items-center gap-1"
+              >
+                <span>{showCustomPermissions ? 'Hide Granular Matrix' : 'Customize Granular Matrix'}</span>
+                {showCustomPermissions ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            {/* Role Tier Selector Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {(
+                [
+                  'senior_astrologer',
+                  'associate_astrologer',
+                  'cartomancy_specialist',
+                  'apprentice_fellow'
+                ] as PractitionerRoleTier[]
+              ).map((tier) => (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => handleRoleChange(tier)}
+                  className={`p-3 rounded-2xl border text-left transition-all ${
+                    roleTier === tier
+                      ? 'border-[#C59B4B] bg-[#FAF3E3]/60 text-[#0F172A] ring-1 ring-[#C59B4B]'
+                      : 'border-[#E8E2D8] bg-[#FCFBF9] text-[#64748B] hover:bg-white hover:border-[#C59B4B]/40'
+                  }`}
+                >
+                  <div className="font-bold text-xs text-[#0F172A] flex items-center justify-between">
+                    <span>{PRACTITIONER_ROLE_LABELS[tier]}</span>
+                    {roleTier === tier && <CheckCircle2 className="w-4 h-4 text-[#C59B4B]" />}
+                  </div>
+                  <div className="text-[11px] text-[#78716C] mt-1 line-clamp-2">
+                    {PRACTITIONER_ROLE_DESCRIPTIONS[tier]}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Granular Permission Toggles */}
+            {showCustomPermissions && (
+              <div className="p-3.5 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8] space-y-2.5 animate-in fade-in">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#0F172A] block mb-1">
+                  Granular Permission Overrides for {PRACTITIONER_ROLE_LABELS[roleTier]}
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-[#E8E2D8] cursor-pointer hover:border-[#C59B4B]/60">
+                    <input
+                      type="checkbox"
+                      checked={permissions.canAccessJHoraEngine}
+                      onChange={() => togglePermission('canAccessJHoraEngine')}
+                      className="rounded text-[#C59B4B] focus:ring-[#C59B4B]"
+                    />
+                    <span className="text-[11px] text-[#0F172A] font-medium">
+                      JHora Sidereal & Varga Engine
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-[#E8E2D8] cursor-pointer hover:border-[#C59B4B]/60">
+                    <input
+                      type="checkbox"
+                      checked={permissions.canSuggestRemedies}
+                      onChange={() => togglePermission('canSuggestRemedies')}
+                      className="rounded text-[#C59B4B] focus:ring-[#C59B4B]"
+                    />
+                    <span className="text-[11px] text-[#0F172A] font-medium">
+                      Suggest Contemplative Practices (Upayas)
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-[#E8E2D8] cursor-pointer hover:border-[#C59B4B]/60">
+                    <input
+                      type="checkbox"
+                      checked={permissions.canDirectMessageClients}
+                      onChange={() => togglePermission('canDirectMessageClients')}
+                      className="rounded text-[#C59B4B] focus:ring-[#C59B4B]"
+                    />
+                    <span className="text-[11px] text-[#0F172A] font-medium">
+                      Direct Client In-App Messaging
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-[#E8E2D8] cursor-pointer hover:border-[#C59B4B]/60">
+                    <input
+                      type="checkbox"
+                      checked={permissions.canExportClientCharts}
+                      onChange={() => togglePermission('canExportClientCharts')}
+                      className="rounded text-[#C59B4B] focus:ring-[#C59B4B]"
+                    />
+                    <span className="text-[11px] text-[#0F172A] font-medium">
+                      Export Natal & Transit PDF Folios
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-[#E8E2D8] cursor-pointer hover:border-[#C59B4B]/60">
+                    <input
+                      type="checkbox"
+                      checked={permissions.canPublishToSanctuaryNotes}
+                      onChange={() => togglePermission('canPublishToSanctuaryNotes')}
+                      className="rounded text-[#C59B4B] focus:ring-[#C59B4B]"
+                    />
+                    <span className="text-[11px] text-[#0F172A] font-medium">
+                      Publish to Sanctuary Knowledge Base
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-[#E8E2D8] cursor-pointer hover:border-[#C59B4B]/60">
+                    <input
+                      type="checkbox"
+                      checked={permissions.canViewUnassignedQueue}
+                      onChange={() => togglePermission('canViewUnassignedQueue')}
+                      className="rounded text-[#C59B4B] focus:ring-[#C59B4B]"
+                    />
+                    <span className="text-[11px] text-[#0F172A] font-medium">
+                      Claim Clients from Intake Triage
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-[#E8E2D8] cursor-pointer hover:border-[#C59B4B]/60">
+                    <input
+                      type="checkbox"
+                      checked={permissions.canModifyConsultationFees}
+                      onChange={() => togglePermission('canModifyConsultationFees')}
+                      className="rounded text-[#C59B4B] focus:ring-[#C59B4B]"
+                    />
+                    <span className="text-[11px] text-[#0F172A] font-medium">
+                      Apply Client Fee Concessions
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-[#E8E2D8] cursor-pointer hover:border-[#C59B4B]/60">
+                    <input
+                      type="checkbox"
+                      checked={permissions.requireAdminSummaryReview}
+                      onChange={() => togglePermission('requireAdminSummaryReview')}
+                      className="rounded text-amber-600 focus:ring-amber-500"
+                    />
+                    <span className="text-[11px] text-[#0F172A] font-medium">
+                      Require Director Summary Sign-off
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Bio */}
           <div>
             <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
               Clinical / Contemplative Bio & Credentials
@@ -193,6 +388,7 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
             />
           </div>
 
+          {/* Tracking, Commission & Capacity */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#E8E2D8]">
             <div>
               <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
@@ -239,6 +435,7 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
             </div>
           </div>
 
+          {/* Banking / Payout Rail */}
           <div className="pt-2 border-t border-[#E8E2D8]">
             <h4 className="font-semibold text-[#0F172A] text-xs mb-2 flex items-center gap-1.5">
               <CreditCard className="w-4 h-4 text-[#C59B4B]" />
@@ -265,13 +462,13 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
 
               <div>
                 <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
-                  Account / Routing / IBAN / Email Details
+                  Demonstration Payout Reference (Fictional)
                 </label>
                 <input
                   type="text"
                   value={payoutDetails}
                   onChange={(e) => setPayoutDetails(e.target.value)}
-                  placeholder="e.g. IBAN CH93... or wise-email@domain.com"
+                  placeholder="e.g. Demo Payout Reference (Fictional)"
                   className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] font-mono text-xs focus:outline-none focus:border-[#C59B4B]"
                 />
               </div>
@@ -281,7 +478,7 @@ export const AddAffiliateModal: React.FC<AddAffiliateModalProps> = ({
           <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#E8E2D8] text-[11px] text-[#78716C] flex items-start gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
             <span>
-              Onboarding automatically syncs to the global practitioner directory, provisions JHora sidereal calculation access, generates encrypted consultation room keys, and notifies all partners via live broadcast.
+              Onboarding automatically syncs to the practitioner directory, provisions sidereal calculation access, generates demo consultation room links, and notifies partners via live broadcast.
             </span>
           </div>
 

@@ -7,7 +7,7 @@ interface PublicHeaderProps {
   settings: WebsiteSettings;
   activeTab: 'home' | 'services' | 'about' | 'booking';
   onNavigate: (tab: 'home' | 'services' | 'about' | 'booking') => void;
-  onOpenPortal: (role: UserRole) => void;
+  onOpenSignIn: () => void;
   reducedMotion?: boolean;
 }
 
@@ -15,7 +15,7 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
   settings,
   activeTab,
   onNavigate,
-  onOpenPortal,
+  onOpenSignIn,
   reducedMotion = false
 }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -137,33 +137,14 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
 
         {/* Right Action Buttons */}
         <div className="hidden sm:flex items-center gap-3">
-          {/* Sign In Dropdown / Portals */}
-          <div className="relative group">
-            <button className="px-3 py-1.5 rounded-lg border border-[#E8E2D8] bg-white text-xs text-[#0F172A] hover:border-[#C59B4B] flex items-center gap-1.5 transition-colors">
-              <Lock className="w-3.5 h-3.5 text-[#C59B4B]" />
-              <span>Portal Sign In</span>
-            </button>
-            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-[#E8E2D8] py-2 hidden group-hover:block z-50">
-              <button
-                onClick={() => onOpenPortal('client')}
-                className="w-full text-left px-4 py-2 text-xs text-[#0F172A] hover:bg-[#FAF8F5] transition-colors"
-              >
-                Client Portal
-              </button>
-              <button
-                onClick={() => onOpenPortal('affiliate')}
-                className="w-full text-left px-4 py-2 text-xs text-[#0F172A] hover:bg-[#FAF8F5] transition-colors"
-              >
-                Affiliate Practitioner Portal
-              </button>
-              <button
-                onClick={() => onOpenPortal('admin')}
-                className="w-full text-left px-4 py-2 text-xs text-[#0F172A] hover:bg-[#FAF8F5] transition-colors border-t border-[#E8E2D8]/60 font-semibold"
-              >
-                Admin Suite
-              </button>
-            </div>
-          </div>
+          {/* Sign In Action */}
+          <button
+            onClick={onOpenSignIn}
+            className="px-3.5 py-2 rounded-xl border border-[#E8E2D8] bg-white text-xs font-semibold text-[#0F172A] hover:border-[#C59B4B] hover:text-[#C59B4B] flex items-center gap-1.5 transition-colors shadow-2xs"
+          >
+            <Lock className="w-3.5 h-3.5 text-[#C59B4B]" />
+            <span>Sign In</span>
+          </button>
 
           {/* Book a Reading Magnetic CTA */}
           <MagneticButton
@@ -227,35 +208,16 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
             >
               Book a Reading
             </MagneticButton>
-            <div className="grid grid-cols-3 gap-1 pt-2">
-              <button
-                onClick={() => {
-                  onOpenPortal('client');
-                  setMobileOpen(false);
-                }}
-                className="py-1.5 text-center text-[10px] bg-[#FAF8F5] border border-[#E8E2D8] rounded text-[#0F172A]"
-              >
-                Client
-              </button>
-              <button
-                onClick={() => {
-                  onOpenPortal('affiliate');
-                  setMobileOpen(false);
-                }}
-                className="py-1.5 text-center text-[10px] bg-[#FAF8F5] border border-[#E8E2D8] rounded text-[#0F172A]"
-              >
-                Affiliate
-              </button>
-              <button
-                onClick={() => {
-                  onOpenPortal('admin');
-                  setMobileOpen(false);
-                }}
-                className="py-1.5 text-center text-[10px] bg-[#FAF8F5] border border-[#E8E2D8] rounded text-[#0F172A] font-semibold"
-              >
-                Admin
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                onOpenSignIn();
+                setMobileOpen(false);
+              }}
+              className="w-full py-2.5 text-center text-xs font-semibold bg-[#FAF8F5] border border-[#E8E2D8] rounded-xl text-[#0F172A] flex items-center justify-center gap-2 hover:border-[#C59B4B]"
+            >
+              <Lock className="w-3.5 h-3.5 text-[#C59B4B]" />
+              <span>Portal Sign In</span>
+            </button>
           </div>
         </div>
       )}

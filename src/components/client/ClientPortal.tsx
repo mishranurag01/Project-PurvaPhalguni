@@ -21,6 +21,7 @@ import {
   HeartPulse
 } from 'lucide-react';
 import { soundSynth } from '../../utils/soundAmbience';
+import { NotAuthenticated } from '../common/NotAuthenticated';
 
 interface ClientPortalProps {
   client: UserProfile;
@@ -35,6 +36,16 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   onExitPortal,
   reducedMotion = false
 }) => {
+  if (!initialClient) {
+    return (
+      <NotAuthenticated
+        requiredPortalName="Client Sanctuary"
+        onSignIn={onExitPortal}
+        onReturnHome={onExitPortal}
+      />
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'bookings' | 'messages' | 'summaries' | 'consent'>('dashboard');
   const [client, setClient] = useState<UserProfile>(initialClient);
   const [bookings, setBookings] = useState<BookingSession[]>([]);
@@ -55,6 +66,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   const [consentActive, setConsentActive] = useState(client.consentGiven && !client.consentWithdrawn);
   const [showDeletionModal, setShowDeletionModal] = useState(false);
   const [deletionConfirmed, setDeletionConfirmed] = useState(false);
+
+  const assignedAffiliate =
+    PracticeStore.getUsers().find((u) => u.id === client.assignedAffiliateId) ||
+    PracticeStore.getUsers().find((u) => u.role === 'affiliate');
 
   useEffect(() => {
     // Load fresh data
@@ -113,7 +128,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
       senderName: client.name,
       senderRole: 'client',
       recipientId: client.assignedAffiliateId || 'user-affiliate-1',
-      recipientName: 'Dr. Julian Croft',
+      recipientName: assignedAffiliate?.name || 'Assigned Practitioner (Demo)',
       text: newMessageText.trim(),
       timestamp: new Date().toISOString(),
       isRead: false
@@ -334,8 +349,12 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white p-5 rounded-2xl border border-[#E8E2D8]">
                   <span className="text-xs text-[#78716C]">Assigned Practitioner</span>
-                  <div className="text-base font-serif font-bold text-[#0F172A] mt-1">Dr. Julian Croft</div>
-                  <span className="text-[11px] text-[#A87F32]">Sidereal & 6th Bhava Lead</span>
+                  <div className="text-base font-serif font-bold text-[#0F172A] mt-1">
+                    {assignedAffiliate?.name || 'Demo Affiliate 1'}
+                  </div>
+                  <span className="text-[11px] text-[#A87F32]">
+                    {assignedAffiliate?.specialty || 'Sidereal Astrological Consultant'}
+                  </span>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-[#E8E2D8]">
@@ -351,7 +370,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
                   <div className="text-base font-serif font-bold text-[#0F172A] mt-1">
                     {summaries.length} Folios
                   </div>
-                  <span className="text-[11px] text-[#78716C]">Encrypted & Permanent</span>
+                  <span className="text-[11px] text-[#78716C]">Temporary Demo Session</span>
                 </div>
               </div>
             </div>
@@ -364,13 +383,13 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
                 Personal Coordinates & Contact Profile
               </h3>
               <p className="text-xs text-[#64748B] mt-1">
-                Your birth details are encrypted and utilized strictly by your assigned practitioner for JHora Sidereal calculations.
+                Your birth details are held in temporary browser memory and utilized strictly by your assigned practitioner for sidereal calculations.
               </p>
 
               {profileSavedMsg && (
                 <div className="mt-4 p-3 bg-emerald-50 text-emerald-800 rounded-xl text-xs flex items-center gap-2 border border-emerald-200">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Profile and birth coordinates preserved securely.</span>
+                  <span>Profile and birth coordinates updated for this session.</span>
                 </div>
               )}
 
@@ -522,7 +541,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
                     Private Practitioner Exchange
                   </h3>
                   <p className="text-[11px] text-[#78716C]">
-                    Direct encrypted channel with Dr. Julian Croft.
+                    Prototype message view — server messaging not connected.
                   </p>
                 </div>
                 <span className="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
@@ -668,7 +687,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
                     Astrological Chart Calculation Consent
                   </h4>
                   <p className="text-xs text-[#526071] mt-1 max-w-md">
-                    Authorizes your assigned practitioner to calculate your Sidereal Lahiri Kundali via the JHora service. You can revoke this permission at any moment.
+                    Authorizes your assigned practitioner to calculate your Sidereal Lahiri Kundali via the local astrological engine (external JHora provider not connected). You can revoke this permission at any moment.
                   </p>
                   <span className="text-[10px] font-mono text-[#78716C] mt-2 block">
                     Consent Version: {client.consentVersion} · Agreed: {client.consentDate}

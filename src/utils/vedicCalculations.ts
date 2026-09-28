@@ -117,40 +117,40 @@ export const HOUSE_DETAILS: { [key: number]: { sanskrit: string; theme: string; 
 
 export const PRESET_PROFILES: BirthProfile[] = [
   {
-    id: 'elena-vance',
-    name: 'Elena Vance',
-    title: 'Creative Director & Visual Strategist',
-    birthDate: '1992-08-28',
-    birthTime: '06:14',
-    birthPlace: 'Kyoto, Japan',
-    latitude: 35.0116,
-    longitude: 135.7681,
-    timezone: 'Asia/Tokyo',
-    summaryQuote: 'Leo Moon seated gracefully in Purva Phalguni brings effortless aesthetic luxury and generous hospitality.'
+    id: 'demo-client-1',
+    name: 'Demo Client 1',
+    title: 'Fictional Creative Profile (Demo)',
+    birthDate: '2000-01-01',
+    birthTime: '12:00',
+    birthPlace: 'Example City',
+    latitude: 37.7749,
+    longitude: -122.4194,
+    timezone: 'UTC',
+    summaryQuote: 'Demo chart calculation seated in Purva Phalguni brings symbolic reflections of hospitality and creative flow.'
   },
   {
-    id: 'marcus-reed',
-    name: 'Dr. Marcus Reed',
-    title: 'Cognitive Neuroscientist & Founder',
-    birthDate: '1987-11-14',
-    birthTime: '14:42',
-    birthPlace: 'Cambridge, MA, USA',
-    latitude: 42.3736,
-    longitude: -71.1097,
-    timezone: 'America/New_York',
-    summaryQuote: 'Scorpio Lagna with Jupiter and Mercury in profound Kendra aspect—an instinct for penetrating research.'
+    id: 'demo-client-2',
+    name: 'Demo Client 2',
+    title: 'Fictional Research Profile (Demo)',
+    birthDate: '1995-05-15',
+    birthTime: '08:30',
+    birthPlace: 'Example City',
+    latitude: 40.7128,
+    longitude: -74.006,
+    timezone: 'UTC',
+    summaryQuote: 'Demo chart calculation with Kendra planetary alignments for contemplative research.'
   },
   {
-    id: 'ananya-sharma',
-    name: 'Ananya Sharma',
-    title: 'Architect & Sustainable Urbanist',
-    birthDate: '1995-04-18',
-    birthTime: '09:20',
-    birthPlace: 'Udaipur, India',
-    latitude: 24.5854,
-    longitude: 73.7125,
-    timezone: 'Asia/Kolkata',
-    summaryQuote: 'Taurus Lagna crowned by exalted Venus in Pisces—spatial harmony, organic proportion, and tactile beauty.'
+    id: 'demo-client-3',
+    name: 'Demo Client 3',
+    title: 'Fictional Design Profile (Demo)',
+    birthDate: '1990-10-20',
+    birthTime: '16:45',
+    birthPlace: 'Example City',
+    latitude: 51.5074,
+    longitude: -0.1278,
+    timezone: 'UTC',
+    summaryQuote: 'Demo chart calculation reflecting spatial harmony and somatic pacing.'
   },
   {
     id: 'now-transit',
@@ -158,7 +158,7 @@ export const PRESET_PROFILES: BirthProfile[] = [
     title: 'Live Transit Ephemeris & Cosmic Weather',
     birthDate: new Date().toISOString().split('T')[0],
     birthTime: '12:00',
-    birthPlace: 'Greenwich, UK',
+    birthPlace: 'Example City',
     latitude: 51.4826,
     longitude: 0.0,
     timezone: 'UTC',
@@ -220,7 +220,7 @@ export function calculateVedicChart(profile: BirthProfile): ChartCalculationResu
   // Pre-configured celestial orbital parameters based on sidereal speeds
   const planetSeeds: { name: PlanetName; sanskrit: string; symbol: string; shortCode: string; speedOffset: number; retroChance: boolean; karaka: string; gemstone: string; color: string }[] = [
     { name: 'Sun', sanskrit: 'Surya', symbol: '☉', shortCode: 'Su', speedOffset: 0.9856 * dayOfYear + 280, retroChance: false, karaka: 'Soul / Father', gemstone: 'Ruby / Padmaraga', color: '#D97706' },
-    { name: 'Moon', sanskrit: 'Chandra', symbol: '☽', shortCode: 'Mo', speedOffset: 13.176 * dayOfYear + 120 + (profile.id === 'elena-vance' ? 140 : 0), retroChance: false, karaka: 'Mind / Mother', gemstone: 'Pearl / Mukta', color: '#64748B' },
+    { name: 'Moon', sanskrit: 'Chandra', symbol: '☽', shortCode: 'Mo', speedOffset: 13.176 * dayOfYear + 120 + (profile.id === 'demo-client-1' ? 140 : 0), retroChance: false, karaka: 'Mind / Mother', gemstone: 'Pearl / Mukta', color: '#64748B' },
     { name: 'Mars', sanskrit: 'Mangala', symbol: '♂', shortCode: 'Ma', speedOffset: 0.524 * dayOfYear + 45, retroChance: true, karaka: 'Courage / Brothers', gemstone: 'Red Coral / Moonga', color: '#DC2626' },
     { name: 'Mercury', sanskrit: 'Budha', symbol: '☿', shortCode: 'Me', speedOffset: 4.092 * dayOfYear + 295, retroChance: true, karaka: 'Intellect / Speech', gemstone: 'Emerald / Panna', color: '#059669' },
     { name: 'Jupiter', sanskrit: 'Guru', symbol: '♃', shortCode: 'Ju', speedOffset: 0.083 * dayOfYear + 210, retroChance: true, karaka: 'Wisdom / Grace', gemstone: 'Yellow Sapphire / Pukhraj', color: '#D97706' },
@@ -230,16 +230,16 @@ export function calculateVedicChart(profile: BirthProfile): ChartCalculationResu
     { name: 'Ketu', sanskrit: 'Ketu', symbol: '☋', shortCode: 'Ke', speedOffset: 360 - (0.052 * dayOfYear + 240), retroChance: true, karaka: 'Moksha / Intuition', gemstone: "Cat's Eye / Lehsunia", color: '#9A3412' }
   ];
 
-  // Specific overrides for the hero sample: Elena Vance has Purva Phalguni Moon
+  // Specific overrides for demo sample: Demo Client 1 has Purva Phalguni Moon
   const planets: PlanetPosition[] = planetSeeds.map((ps) => {
     let rawLong = (ps.speedOffset + (dateObj.getFullYear() - 1980) * 15) % 360;
     if (rawLong < 0) rawLong += 360;
 
-    if (profile.id === 'elena-vance' && ps.name === 'Moon') {
+    if (profile.id === 'demo-client-1' && ps.name === 'Moon') {
       // Purva Phalguni is 133°20' to 146°40' (Leo 13°20' to 26°40')
       rawLong = 140.5;
     }
-    if (profile.id === 'ananya-sharma' && ps.name === 'Venus') {
+    if (profile.id === 'demo-client-3' && ps.name === 'Venus') {
       // Exalted in Pisces 335 deg
       rawLong = 357.0;
     }
