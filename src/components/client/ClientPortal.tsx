@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserProfile, BookingSession, ReadingSummary, DirectMessage, WebsiteSettings } from '../../types/practice';
+import { UserProfile, BookingSession, ReadingSummary, DirectMessage, WebsiteSettings, ServicePlan } from '../../types/practice';
 import { PracticeStore } from '../../services/store';
 import { MagneticButton } from '../MagneticButton';
 import {
@@ -18,7 +18,8 @@ import {
   XCircle,
   LogOut,
   MapPin,
-  HeartPulse
+  HeartPulse,
+  Radio
 } from 'lucide-react';
 import { soundSynth } from '../../utils/soundAmbience';
 import { NotAuthenticated } from '../common/NotAuthenticated';
@@ -52,6 +53,8 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   const [summaries, setSummaries] = useState<ReadingSummary[]>([]);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [newMessageText, setNewMessageText] = useState('');
+  const [services, setServices] = useState<ServicePlan[]>(() => PracticeStore.getServices());
+  const [rateUpdateBanner, setRateUpdateBanner] = useState<string | null>(null);
 
   // Editable Profile State
   const [name, setName] = useState(client.name);
@@ -84,6 +87,30 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
     setBookings(allBookings);
     setSummaries(allSummaries);
     setMessages(allMessages);
+    setServices(PracticeStore.getServices());
+
+    // Register event listener for real-time SERVICES_UPDATED events
+    const unsubServices = PracticeStore.addEventListener('SERVICES_UPDATED', (e) => {
+      const freshServices = PracticeStore.getServices();
+      setServices(freshServices);
+      const updatedSvc = e.payload?.updatedService;
+      if (updatedSvc) {
+        setRateUpdateBanner(`Practice Rate Update: "${updatedSvc.name}" updated to ${updatedSvc.duration} ($${updatedSvc.price} USD).`);
+      } else {
+        setRateUpdateBanner('Practice Rate Update: Consultation catalog & durations updated in real time.');
+      }
+      setTimeout(() => setRateUpdateBanner(null), 6000);
+    });
+
+    // Register event listener for BOOKINGS_UPDATED
+    const unsubBookings = PracticeStore.addEventListener('BOOKINGS_UPDATED', () => {
+      setBookings(PracticeStore.getBookings().filter((b) => b.clientId === client.id));
+    });
+
+    return () => {
+      unsubServices();
+      unsubBookings();
+    };
   }, [client.id]);
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -291,6 +318,22 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
         {/* Tab Content Panes */}
         <div className="lg:col-span-9 space-y-6">
+          {/* Real-time Rate / Duration Update Alert */}
+          {rateUpdateBanner && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                <span className="font-semibold">{rateUpdateBanner}</span>
+              </div>
+              <button
+                onClick={() => setRateUpdateBanner(null)}
+                className="text-amber-800 hover:text-black text-xs font-semibold px-2 py-0.5"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* TAB 1: DASHBOARD */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
@@ -371,6 +414,39 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
                     {summaries.length} Folios
                   </div>
                   <span className="text-[11px] text-[#78716C]">Temporary Demo Session</span>
+                </div>
+              </div>
+
+              {/* Practice Consultation Schedule & Live Rates Card */}
+              <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E8E2D8]">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#C59B4B]" />
+                    <h4 className="text-lg font-serif font-bold text-[#0F172A]">
+                      Sanctuary Consultation Schedule & Live Rates
+                    </h4>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[10px] font-mono text-emerald-800 border border-emerald-200 self-start sm:self-auto">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Real-Time Practice Sync</span>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {services.filter((s) => s.isActive).map((s) => (
+                    <div key={s.id} className="p-4 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] text-[#A87F32] font-semibold">{s.code}</span>
+                        <span className="font-serif font-bold text-sm text-[#0F172A]">${s.price} USD</span>
+                      </div>
+                      <h5 className="font-serif font-bold text-xs text-[#0F172A]">{s.name}</h5>
+                      <div className="text-[11px] text-[#526071] flex items-center gap-1.5 font-medium">
+                        <Clock className="w-3.5 h-3.5 text-[#C59B4B]" />
+                        <span>Session Duration: {s.duration}</span>
+                      </div>
+                      <p className="text-[10px] text-[#78716C] line-clamp-2">{s.shortDesc}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -485,49 +561,82 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
               </h3>
 
               <div className="space-y-4">
-                {bookings.map((b) => (
-                  <div
-                    key={b.id}
-                    className="p-5 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-serif font-bold text-base text-[#0F172A]">
-                          {b.serviceName}
-                        </span>
-                        <span className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded border ${
-                          b.status === 'confirmed'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : b.status === 'completed'
-                            ? 'bg-blue-50 text-blue-800 border-blue-200'
-                            : 'bg-gray-100 text-gray-700 border-gray-200'
-                        }`}>
-                          {b.status}
-                        </span>
+                {bookings.map((b) => {
+                  const svc = services.find((s) => s.id === b.serviceId || s.name === b.serviceName);
+                  return (
+                    <div
+                      key={b.id}
+                      className="p-5 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-serif font-bold text-base text-[#0F172A]">
+                            {b.serviceName}
+                          </span>
+                          <span className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded border ${
+                            b.status === 'confirmed'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : b.status === 'completed'
+                              ? 'bg-blue-50 text-blue-800 border-blue-200'
+                              : 'bg-gray-100 text-gray-700 border-gray-200'
+                          }`}>
+                            {b.status}
+                          </span>
+                        </div>
+                        <div className="text-xs text-[#526071] mt-1">
+                          Practitioner: {b.affiliateName} · {b.date} at {b.timeSlot}
+                        </div>
+                        <div className="text-[11px] text-[#A87F32] mt-0.5 font-medium flex items-center gap-1.5">
+                          <Clock className="w-3 h-3" />
+                          <span>Standard Duration: {svc?.duration || '60 min'}</span>
+                          <span>·</span>
+                          <span>Current Practice Rate: ${svc?.price || b.amount} USD</span>
+                        </div>
+                        <p className="text-[11px] text-[#78716C] mt-1 italic">
+                          "{b.clientIntention}"
+                        </p>
                       </div>
-                      <div className="text-xs text-[#526071] mt-1">
-                        Practitioner: {b.affiliateName} · {b.date} at {b.timeSlot}
-                      </div>
-                      <p className="text-[11px] text-[#78716C] mt-1 italic">
-                        "{b.clientIntention}"
-                      </p>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      {b.status === 'confirmed' && (
-                        <button
-                          onClick={() => handleCancelBooking(b.id)}
-                          className="px-3 py-1.5 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 text-xs font-medium"
-                        >
-                          Cancel / Reschedule
-                        </button>
-                      )}
-                      <span className="font-serif font-bold text-base text-[#0F172A]">
-                        ${b.amount} USD
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {b.status === 'confirmed' && (
+                          <button
+                            onClick={() => handleCancelBooking(b.id)}
+                            className="px-3 py-1.5 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 text-xs font-medium"
+                          >
+                            Cancel / Reschedule
+                          </button>
+                        )}
+                        <span className="font-serif font-bold text-base text-[#0F172A]">
+                          ${b.amount} USD
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+
+              {/* Consultation Rate Schedule Reference */}
+              <div className="pt-6 border-t border-[#E8E2D8] space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-serif font-bold text-sm text-[#0F172A]">
+                    Practice Rate Schedule & Consultation Durations
+                  </h4>
+                  <span className="text-[10px] font-mono text-emerald-700 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Real-time Synced</span>
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {services.filter((s) => s.isActive).map((s) => (
+                    <div key={s.id} className="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8] text-xs space-y-1">
+                      <div className="font-bold text-[#0F172A]">{s.name}</div>
+                      <div className="text-[#64748B] flex items-center justify-between text-[11px]">
+                        <span>{s.duration}</span>
+                        <span className="font-mono font-bold text-[#0F172A]">${s.price} USD</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

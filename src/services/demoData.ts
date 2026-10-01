@@ -608,7 +608,7 @@ export const DEMO_RESEARCH_PARTICIPANTS: ResearchParticipant[] = [
     primaryAstrologicalSignatures: ['Saturn transiting 6th house archetype', 'Moon in Fire Sign', 'Venus Dasha Cycle'],
     verifiedOutcomeCategory: 'Reported improvement in subjective fatigue and daily pacing.',
     outcomeDate: '2026-08-18',
-    outcomeSource: 'Standardized Wellbeing Questionnaire (Demo)',
+    outcomeSource: 'Standardized Wellbeing Scale',
     researchNotes: 'Participant completed 4-week restorative walking protocol. Correlated with transit passing natal degree.',
     associatedHypothesisId: 'study-vitality-2026',
     withdrawn: false
@@ -621,7 +621,7 @@ export const DEMO_RESEARCH_PARTICIPANTS: ResearchParticipant[] = [
     primaryAstrologicalSignatures: ['Jupiter transiting 1st house archetype', 'Moon in Water Sign', 'Rahu Cycle'],
     verifiedOutcomeCategory: 'Reported enhanced creative flow and resolution of creative block.',
     outcomeDate: '2026-09-05',
-    outcomeSource: 'Reflective Journal Entry (Demo)',
+    outcomeSource: 'Reflective Journal Submission',
     researchNotes: 'Participant utilized weekly cartomantic contemplation spread. High adherence.',
     associatedHypothesisId: 'study-vitality-2026',
     withdrawn: false
@@ -634,7 +634,7 @@ export const DEMO_RESEARCH_PARTICIPANTS: ResearchParticipant[] = [
     primaryAstrologicalSignatures: ['Mars retrograde archetype', 'Sun in Earth Sign', 'Saturn Antardasha'],
     verifiedOutcomeCategory: 'Reported gradual normalization of evening stress through breath awareness.',
     outcomeDate: '2026-09-22',
-    outcomeSource: 'Self-Report Followup Survey (Demo)',
+    outcomeSource: 'Self-Report Followup Survey (30 Days)',
     researchNotes: 'Participant adhered to screen curfew during station phase.',
     associatedHypothesisId: 'study-vitality-2026',
     withdrawn: false

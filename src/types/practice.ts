@@ -130,6 +130,7 @@ export interface UserProfile {
   // Affiliate specific
   affiliateCode?: string;
   commissionRate?: number; // e.g. 0.20
+  payoutSplitPercentage?: number; // e.g. 60
   specialty?: string;
   bio?: string;
   activeStatus?: 'active' | 'pending' | 'suspended' | 'deactivated';
@@ -308,6 +309,7 @@ export interface AuditLogEntry {
     | 'CONSENT_WITHDRAWN'
     | 'DATA_EXPORT'
     | 'SETTINGS_CHANGED'
+    | 'SERVICES_CHANGED'
     | 'REVIEW_APPROVED'
     | 'AFFILIATE_ADDED'
     | 'AFFILIATE_REMOVED'

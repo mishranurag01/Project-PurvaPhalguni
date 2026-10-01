@@ -55,6 +55,28 @@ export const INITIAL_AUDIT_LOGS = DEMO_AUDIT_LOGS;
 export const INITIAL_BULLETINS = DEMO_BULLETINS;
 export const INITIAL_PAYOUTS = DEMO_PAYOUTS;
 
+export type StoreEventType =
+  | 'SERVICES_UPDATED'
+  | 'SETTINGS_UPDATED'
+  | 'USERS_UPDATED'
+  | 'BOOKINGS_UPDATED'
+  | 'SUMMARIES_UPDATED'
+  | 'MESSAGES_UPDATED'
+  | 'BULLETINS_UPDATED'
+  | 'PAYOUTS_UPDATED'
+  | 'AFFILIATE_STATUS_CHANGED'
+  | 'AFFILIATE_PERMISSIONS_UPDATED'
+  | 'STORE_RESET'
+  | '*';
+
+export interface StoreSyncEvent<T = any> {
+  type: StoreEventType | string;
+  payload?: T;
+  timestamp: number;
+}
+
+export type StoreEventListener<T = any> = (event: StoreSyncEvent<T>) => void;
+
 /**
  * State Store Helper (Prototype Mode)
  *
@@ -95,6 +117,7 @@ export class PracticeStore {
       'SETTINGS_CHANGED',
       'Updated website content, disclaimer, or brand name (session in-memory).'
     );
+    this.notifySync('SETTINGS_UPDATED', settings);
   }
 
   static getUsers(): UserProfile[] {
@@ -103,6 +126,7 @@ export class PracticeStore {
 
   static saveUsers(users: UserProfile[]): void {
     this.save('users', users);
+    this.notifySync('USERS_UPDATED', users);
   }
 
   static getServices(): ServicePlan[] {
@@ -111,6 +135,59 @@ export class PracticeStore {
 
   static saveServices(services: ServicePlan[]): void {
     this.save('services', services);
+    this.logAction(
+      'user-admin-demo',
+      'Demo Admin',
+      'admin',
+      'SERVICES_CHANGED',
+      `Updated ${services.length} services configuration (pricing/durations).`
+    );
+    this.notifySync('SERVICES_UPDATED', {
+      services,
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  static updateService(serviceId: string, updates: Partial<ServicePlan>): ServicePlan | null {
+    const services = this.getServices();
+    const idx = services.findIndex((s) => s.id === serviceId);
+    if (idx === -1) return null;
+
+    const existing = services[idx];
+    const updated: ServicePlan = {
+      ...existing,
+      ...updates
+    };
+
+    // Keep duration string & durationMinutes synchronized
+    if (updates.durationMinutes !== undefined && !updates.duration) {
+      updated.duration = `${updates.durationMinutes} min`;
+    } else if (updates.duration && updates.durationMinutes === undefined) {
+      const parsed = parseInt(updates.duration.replace(/\D/g, ''), 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        updated.durationMinutes = parsed;
+      }
+    }
+
+    services[idx] = updated;
+    this.save('services', services);
+
+    this.logAction(
+      'user-admin-demo',
+      'Demo Admin',
+      'admin',
+      'SERVICES_CHANGED',
+      `Updated service "${updated.name}" (${updated.code}): Price $${updated.price}, Duration ${updated.duration}.`
+    );
+
+    this.notifySync('SERVICES_UPDATED', {
+      services,
+      updatedService: updated,
+      serviceId,
+      updatedAt: new Date().toISOString()
+    });
+
+    return updated;
   }
 
   static getBookings(): BookingSession[] {
@@ -119,6 +196,7 @@ export class PracticeStore {
 
   static saveBookings(bookings: BookingSession[]): void {
     this.save('bookings', bookings);
+    this.notifySync('BOOKINGS_UPDATED', bookings);
   }
 
   static getSummaries(): ReadingSummary[] {
@@ -127,6 +205,7 @@ export class PracticeStore {
 
   static saveSummaries(summaries: ReadingSummary[]): void {
     this.save('summaries', summaries);
+    this.notifySync('SUMMARIES_UPDATED', summaries);
   }
 
   static getNotes(): PractitionerNote[] {
@@ -626,29 +705,91 @@ export class PracticeStore {
     };
   }
 
+  // In-memory typed listener registry for event-listener pattern
+  private static listeners: Map<string, Set<StoreEventListener>> = new Map();
+
+  /**
+   * Register an event listener for a specific store event type or '*' for all events.
+   * Returns an unregister function.
+   */
+  static addEventListener<T = any>(
+    eventType: StoreEventType | string,
+    callback: StoreEventListener<T>
+  ): () => void {
+    if (!this.listeners.has(eventType)) {
+      this.listeners.set(eventType, new Set());
+    }
+    this.listeners.get(eventType)!.add(callback as StoreEventListener);
+
+    return () => {
+      this.removeEventListener(eventType, callback);
+    };
+  }
+
+  static removeEventListener<T = any>(
+    eventType: StoreEventType | string,
+    callback: StoreEventListener<T>
+  ): void {
+    const set = this.listeners.get(eventType);
+    if (set) {
+      set.delete(callback as StoreEventListener);
+      if (set.size === 0) {
+        this.listeners.delete(eventType);
+      }
+    }
+  }
+
   // Cross-Applet Real-Time Event Sync Dispatcher
-  static notifySync(type: string, payload?: any): void {
+  static notifySync<T = any>(type: StoreEventType | string, payload?: T): void {
+    const event: StoreSyncEvent<T> = {
+      type,
+      payload,
+      timestamp: Date.now()
+    };
+
+    // 1. Invoke specific in-memory listeners
+    const specific = this.listeners.get(type);
+    if (specific) {
+      specific.forEach((fn) => {
+        try {
+          fn(event);
+        } catch (err) {
+          console.error(`Store listener error for "${type}":`, err);
+        }
+      });
+    }
+
+    // 2. Invoke wildcard in-memory listeners
+    const wildcard = this.listeners.get('*');
+    if (wildcard) {
+      wildcard.forEach((fn) => {
+        try {
+          fn(event);
+        } catch (err) {
+          console.error('Store wildcard listener error:', err);
+        }
+      });
+    }
+
+    // 3. Dispatch DOM CustomEvent for browser-level / iframe sync
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('medastrology_sync', {
-          detail: { type, payload, timestamp: Date.now() }
+          detail: event
         })
       );
     }
   }
 
-  static subscribe(
-    listener: (event: { type: string; payload?: any; timestamp: number }) => void
+  /**
+   * Subscribe to store events (default wildcard, or specific eventType).
+   * Fully backwards-compatible with existing PracticeStore.subscribe(fn) callers.
+   */
+  static subscribe<T = any>(
+    listener: (event: StoreSyncEvent<T>) => void,
+    eventType: StoreEventType | string = '*'
   ): () => void {
-    if (typeof window === 'undefined') return () => {};
-    const handler = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      listener(customEvent.detail);
-    };
-    window.addEventListener('medastrology_sync', handler);
-    return () => {
-      window.removeEventListener('medastrology_sync', handler);
-    };
+    return this.addEventListener<T>(eventType, listener);
   }
 
   // Active Session Role Tracking (In-memory)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ServicePlan, UserProfile, BookingSession, WebsiteSettings } from '../../types/practice';
 import { PracticeStore } from '../../services/store';
 import { MagneticButton } from '../MagneticButton';
@@ -78,6 +78,20 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
 
   // Completed booking reference
   const [createdBooking, setCreatedBooking] = useState<BookingSession | null>(null);
+
+  useEffect(() => {
+    if (selectedService) {
+      const match = services.find((s) => s.id === selectedService.id);
+      if (
+        match &&
+        (match.price !== selectedService.price ||
+          match.duration !== selectedService.duration ||
+          match.name !== selectedService.name)
+      ) {
+        setSelectedService(match);
+      }
+    }
+  }, [services, selectedService]);
 
   const availableTimeSlots = [
     '09:30 GMT (Morning Quiet)',

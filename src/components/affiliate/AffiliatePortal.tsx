@@ -7,7 +7,8 @@ import {
   DirectMessage,
   WebsiteSettings,
   AdminBulletin,
-  PartnerPayout
+  PartnerPayout,
+  ServicePlan
 } from '../../types/practice';
 import { PracticeStore } from '../../services/store';
 import { JHoraService, JHoraServiceResponse } from '../../services/jhoraService';
@@ -94,6 +95,8 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
   const [bulletins, setBulletins] = useState<AdminBulletin[]>([]);
   const [payouts, setPayouts] = useState<PartnerPayout[]>([]);
   const [ackToast, setAckToast] = useState<string | null>(null);
+  const [services, setServices] = useState<ServicePlan[]>(() => PracticeStore.getServices());
+  const [serviceNotice, setServiceNotice] = useState<string | null>(null);
 
   // JHora Chart State for Selected Client
   const [chartCalculation, setChartCalculation] = useState<JHoraServiceResponse | null>(null);
@@ -142,6 +145,9 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
     // Disbursed Payouts
     const myPayouts = PracticeStore.getPayouts().filter((p) => p.affiliateId === affiliate.id);
     setPayouts(myPayouts);
+
+    // Services Catalog
+    setServices(PracticeStore.getServices());
   };
 
   useEffect(() => {
@@ -150,7 +156,19 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
     // Live subscription to Admin changes, broadcasts, client reassignments & payouts
     const unsubscribe = PracticeStore.subscribe((event) => {
       loadAffiliateData();
-      if (event.type === 'BULLETIN_ADDED' || event.type === 'PAYOUT_SENT') {
+      if (event.type === 'SERVICES_UPDATED') {
+        const fresh = PracticeStore.getServices();
+        setServices(fresh);
+        const updated = event.payload?.updatedService;
+        if (updated) {
+          setServiceNotice(
+            `Director Update: Service "${updated.name}" updated to ${updated.duration} ($${updated.price} USD · Your Honorarium: $${Math.round(updated.price * (affiliate.payoutSplitPercentage || 60) / 100)} USD).`
+          );
+        } else {
+          setServiceNotice('Director Update: Consultation catalog & rates updated in real time.');
+        }
+        setTimeout(() => setServiceNotice(null), 7000);
+      } else if (event.type === 'BULLETIN_ADDED' || event.type === 'PAYOUT_SENT') {
         soundSynth.playCelestialChime();
       }
     });
@@ -231,7 +249,10 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
     } else {
       setChartCalculation({
         success: false,
-        error: 'Client has not provided active consent for astrology chart generation.'
+        error: 'Client has not provided active consent for astrology chart generation.',
+        provider: 'AstrologyCalculationProvider (Local Demo Engine)',
+        isExternalProviderConnected: false,
+        providerNotice: 'Prototype demonstration engine.'
       });
     }
   }, [selectedClient?.id, affiliate]);
@@ -476,6 +497,22 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
 
         {/* Content Area */}
         <div className="lg:col-span-9 space-y-6">
+          {/* Live Real-time Service Rates Notice */}
+          {serviceNotice && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                <span className="font-semibold">{serviceNotice}</span>
+              </div>
+              <button
+                onClick={() => setServiceNotice(null)}
+                className="text-amber-800 hover:text-black text-xs font-semibold px-2 py-0.5"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* TAB 1: DASHBOARD */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
@@ -686,6 +723,50 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
                       </button>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Practice Service Protocols & Honorarium Schedule */}
+              <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E8E2D8]">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#C59B4B]" />
+                    <h3 className="text-lg font-serif font-bold text-[#0F172A]">
+                      Practice Consultation Protocols & Honorarium Schedule
+                    </h3>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[10px] font-mono text-emerald-800 border border-emerald-200 self-start sm:self-auto">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Real-Time Practice Sync</span>
+                  </span>
+                </div>
+
+                <p className="text-xs text-[#64748B]">
+                  Official practice session durations and honorarium compensation per consultation (Split: {affiliate.payoutSplitPercentage || 60}%).
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {services.filter((s) => s.isActive).map((s) => {
+                    const splitPct = affiliate.payoutSplitPercentage || 60;
+                    const honorariumAmount = Math.round((s.price * splitPct) / 100);
+                    return (
+                      <div key={s.id} className="p-4 rounded-2xl bg-[#FCFBF9] border border-[#E8E2D8] space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[10px] text-[#A87F32] font-semibold">{s.code}</span>
+                          <span className="font-mono text-xs text-[#0F172A] font-bold">Client Fee: ${s.price}</span>
+                        </div>
+                        <h4 className="font-serif font-bold text-sm text-[#0F172A]">{s.name}</h4>
+                        <div className="text-xs text-[#526071] flex items-center gap-1.5 font-medium">
+                          <Clock className="w-3.5 h-3.5 text-[#C59B4B]" />
+                          <span>Session Duration: {s.duration}</span>
+                        </div>
+                        <div className="pt-2 border-t border-[#E8E2D8]/60 flex items-center justify-between text-[11px]">
+                          <span className="text-[#64748B]">Your Honorarium ({splitPct}%):</span>
+                          <span className="font-mono font-bold text-emerald-700">${honorariumAmount} USD</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1050,21 +1131,51 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
           {/* TAB 4: CALENDAR */}
           {activeTab === 'calendar' && (
             <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
-              <h3 className="text-xl font-serif font-bold text-[#0F172A] pb-3 border-b border-[#E8E2D8]">
-                Personal Practitioner Calendar
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E8E2D8]">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-[#0F172A]">
+                    Personal Practitioner Calendar
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Assigned readings with real-time session duration guidelines and compensation splits.
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 self-start sm:self-auto">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Live Practice Rates Synced</span>
+                </span>
+              </div>
+
               <div className="space-y-3">
-                {bookings.map((b) => (
-                  <div key={b.id} className="p-4 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8] flex items-center justify-between text-xs">
-                    <div>
-                      <div className="font-semibold text-[#0F172A] text-sm">{b.date} · {b.timeSlot}</div>
-                      <div className="text-[#526071]">{b.clientName} ({b.serviceName})</div>
+                {bookings.map((b) => {
+                  const matchingSvc = services.find((s) => s.id === b.serviceId || s.name === b.serviceName);
+                  const splitPct = affiliate.payoutSplitPercentage || 60;
+                  const estimatedHonorarium = Math.round((b.amount * splitPct) / 100);
+
+                  return (
+                    <div key={b.id} className="p-4 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div>
+                        <div className="font-semibold text-[#0F172A] text-sm">{b.date} · {b.timeSlot}</div>
+                        <div className="text-[#526071]">{b.clientName} · {b.serviceName}</div>
+                        <div className="text-[11px] text-[#A87F32] mt-1 flex flex-wrap items-center gap-2">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>Paced Duration: {matchingSvc?.duration || '60 min'}</span>
+                          </span>
+                          <span>·</span>
+                          <span>Client Fee: ${b.amount} USD</span>
+                          <span>·</span>
+                          <span className="text-emerald-700 font-semibold font-mono">
+                            Your Honorarium ({splitPct}%): ${estimatedHonorarium} USD
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded font-semibold self-start sm:self-auto">
+                        {b.status}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                      {b.status}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

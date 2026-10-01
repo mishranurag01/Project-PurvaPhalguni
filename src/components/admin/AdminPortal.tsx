@@ -218,18 +218,39 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     PracticeStore.saveReviews(updated);
   };
 
-  // Service management
+  // Service management (Dispatches real-time SERVICES_UPDATED events)
   const handleToggleServiceActive = (serviceId: string) => {
     soundSynth.playSoftTap();
-    const updated = services.map((s) => (s.id === serviceId ? { ...s, isActive: !s.isActive } : s));
-    setServices(updated);
-    PracticeStore.saveServices(updated);
+    const current = services.find((s) => s.id === serviceId);
+    if (!current) return;
+    const updated = PracticeStore.updateService(serviceId, { isActive: !current.isActive });
+    if (updated) {
+      setServices(PracticeStore.getServices());
+      setActionNotification(`Service "${updated.name}" is now ${updated.isActive ? 'Active' : 'Archived'}. Event broadcasted.`);
+      setTimeout(() => setActionNotification(null), 4000);
+    }
   };
 
   const handleUpdateServicePrice = (serviceId: string, newPrice: number) => {
-    const updated = services.map((s) => (s.id === serviceId ? { ...s, price: newPrice } : s));
-    setServices(updated);
-    PracticeStore.saveServices(updated);
+    const updated = PracticeStore.updateService(serviceId, { price: newPrice });
+    if (updated) {
+      setServices(PracticeStore.getServices());
+      setActionNotification(`Updated "${updated.name}" price to $${newPrice} USD. Event broadcasted to Affiliate & Client portals.`);
+      setTimeout(() => setActionNotification(null), 4000);
+    }
+  };
+
+  const handleUpdateServiceDuration = (serviceId: string, newDurationMinutes: number) => {
+    soundSynth.playSoftTap();
+    const updated = PracticeStore.updateService(serviceId, {
+      durationMinutes: newDurationMinutes,
+      duration: `${newDurationMinutes} min`
+    });
+    if (updated) {
+      setServices(PracticeStore.getServices());
+      setActionNotification(`Updated "${updated.name}" duration to ${newDurationMinutes} min. Event broadcasted to Affiliate & Client portals.`);
+      setTimeout(() => setActionNotification(null), 4000);
+    }
   };
 
   // Client assignment to affiliate
@@ -812,9 +833,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           {/* TAB 4: SERVICES & PRICING */}
           {activeTab === 'services' && (
             <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
-              <h3 className="text-xl font-serif font-bold text-[#0F172A] pb-3 border-b border-[#E8E2D8]">
-                Services, Plans & Pricing Configuration
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E2D8]">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-[#0F172A]">
+                    Services, Plans & Pricing Configuration
+                  </h3>
+                  <p className="text-xs text-[#64748B] mt-0.5">
+                    Modifications to service rates, duration, or active status are broadcast in real-time across all portals.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-mono text-emerald-800 self-start sm:self-auto">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Real-time Event-Listener Active</span>
+                </div>
+              </div>
 
               <div className="space-y-6">
                 {services.map((s) => (
@@ -823,25 +855,57 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <div>
                         <span className="font-mono text-xs text-[#A87F32] font-semibold">{s.code}</span>
                         <h4 className="text-xl font-serif font-bold text-[#0F172A]">{s.name}</h4>
-                        <span className="text-xs text-[#64748B]">Duration: {s.duration}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-[#64748B]">Current: {s.duration} · ${s.price} USD</span>
+                          <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${
+                            s.isActive
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : 'bg-gray-100 text-gray-600 border-gray-200'
+                          }`}>
+                            {s.isActive ? 'Active in Directory' : 'Archived'}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <span className="text-[#64748B]">Price:</span>
-                          <input
-                            type="number"
-                            value={s.price}
-                            onChange={(e) => handleUpdateServicePrice(s.id, parseInt(e.target.value) || 0)}
-                            className="w-24 p-1.5 rounded-lg border border-[#E8E2D8] bg-white font-mono text-sm font-bold text-right"
-                          />
-                          <span className="font-mono text-xs">USD</span>
+                      <div className="flex flex-wrap items-center gap-3">
+                        {/* Duration Control */}
+                        <div className="flex items-center gap-1.5 text-xs bg-white p-2 rounded-xl border border-[#E8E2D8]">
+                          <span className="text-[#64748B] font-medium">Duration:</span>
+                          <select
+                            value={s.durationMinutes || 60}
+                            onChange={(e) => handleUpdateServiceDuration(s.id, parseInt(e.target.value, 10))}
+                            className="bg-transparent font-mono text-xs font-semibold text-[#0F172A] focus:outline-none cursor-pointer"
+                          >
+                            <option value={30}>30 min</option>
+                            <option value={45}>45 min</option>
+                            <option value={60}>60 min</option>
+                            <option value={75}>75 min</option>
+                            <option value={90}>90 min</option>
+                            <option value={120}>120 min</option>
+                          </select>
                         </div>
 
+                        {/* Price Control */}
+                        <div className="flex items-center gap-1.5 text-xs bg-white p-2 rounded-xl border border-[#E8E2D8]">
+                          <span className="text-[#64748B] font-medium">Rate:</span>
+                          <input
+                            type="number"
+                            min={0}
+                            step={5}
+                            value={s.price}
+                            onChange={(e) => handleUpdateServicePrice(s.id, parseInt(e.target.value) || 0)}
+                            className="w-20 p-1 rounded border border-[#E8E2D8] bg-[#FCFBF9] font-mono text-xs font-bold text-right focus:border-[#C59B4B] focus:outline-none"
+                          />
+                          <span className="font-mono text-xs text-[#0F172A]">USD</span>
+                        </div>
+
+                        {/* Active Toggle */}
                         <button
                           onClick={() => handleToggleServiceActive(s.id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                            s.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'
+                          className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors border ${
+                            s.isActive
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
+                              : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
                           }`}
                         >
                           {s.isActive ? 'Active' : 'Archived'}
@@ -850,6 +914,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     </div>
 
                     <p className="text-xs text-[#526071]">{s.shortDesc}</p>
+
+                    <div className="pt-2 border-t border-[#E8E2D8]/60 flex items-center justify-between text-[11px] text-[#78716C]">
+                      <span>Includes: {s.includes.slice(0, 2).join(' · ')}...</span>
+                      <span className="font-mono text-[10px] text-[#A87F32]">
+                        Event: SERVICES_UPDATED dispatches on edit
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>

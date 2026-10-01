@@ -137,12 +137,18 @@ export class LocalVedicChartEngine implements ChartCalculationProvider {
     const lat = targetClient.latitude ?? 37.7749;
     const lng = targetClient.longitude ?? -122.4194;
 
-    const chartResult = calculateVedicChart(
-      targetClient.birthDate,
-      targetClient.birthTime,
-      lat,
-      lng
-    );
+    const chartResult = calculateVedicChart({
+      id: targetClient.id,
+      name: targetClient.name,
+      title: 'Client Natal Chart',
+      birthDate: targetClient.birthDate || '1990-01-01',
+      birthTime: targetClient.birthTime || '12:00',
+      birthPlace: targetClient.birthCity || 'San Francisco, CA',
+      latitude: lat,
+      longitude: lng,
+      timezone: targetClient.timezone || 'UTC',
+      summaryQuote: 'Client birth chart calculated via local Sidereal Lahiri astronomical engine.'
+    });
 
     // 5. Derive symbolic constitutional temperaments (Non-diagnostic spiritual reflection)
     const constitutional = this.deriveConstitutionalArchetypes(chartResult);
