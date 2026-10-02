@@ -52,8 +52,8 @@ export const DEMO_SETTINGS: WebsiteSettings = {
 export const DEMO_USERS: UserProfile[] = [
   {
     id: 'user-admin-demo',
-    email: 'admin.demo@example.com',
-    name: 'Demo Admin',
+    email: 'admin@purvaphalguni.com',
+    name: 'Practice Director (Admin)',
     role: 'admin',
     phone: '+1 (555) 010-0001',
     consentGiven: true,
@@ -64,8 +64,8 @@ export const DEMO_USERS: UserProfile[] = [
   },
   {
     id: 'user-affiliate-1',
-    email: 'demo.affiliate1@example.com',
-    name: 'Demo Affiliate 1',
+    email: 'affiliate@purvaphalguni.com',
+    name: 'Dr. Jyotish Patel',
     role: 'affiliate',
     phone: '+1 (555) 010-0002',
     affiliateCode: 'DEMO20',
@@ -126,8 +126,8 @@ export const DEMO_USERS: UserProfile[] = [
   },
   {
     id: 'user-client-1',
-    email: 'demo.client1@example.com',
-    name: 'Demo Client 1',
+    email: 'client@purvaphalguni.com',
+    name: 'Elena Rostova',
     role: 'client',
     phone: '+1 (555) 010-0011',
     assignedAffiliateId: 'user-affiliate-1',

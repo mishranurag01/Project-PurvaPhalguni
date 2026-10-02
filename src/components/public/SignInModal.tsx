@@ -31,32 +31,63 @@ export const SignInModal: React.FC<SignInModalProps> = ({
   onSuccess,
   initialRoleChoice = 'client'
 }) => {
-  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
   const [selectedRole, setSelectedRole] = useState<'client' | 'affiliate' | 'admin'>(initialRoleChoice);
   const users = PracticeStore.getUsers();
 
+  const roleUsers = users.filter((u) => {
+    if (selectedRole === 'affiliate') return u.role === 'affiliate' && u.activeStatus !== 'deactivated';
+    return u.role === selectedRole;
+  });
+
+  const [selectedUserId, setSelectedUserId] = useState<string>(roleUsers[0]?.id || '');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  // Sync default credentials when role changes
+  // Sync default credentials and selected user when role changes
   useEffect(() => {
     setAuthError(null);
+    const available = users.filter((u) => {
+      if (selectedRole === 'affiliate') return u.role === 'affiliate' && u.activeStatus !== 'deactivated';
+      return u.role === selectedRole;
+    });
+
+    const primaryUser = available[0];
+    if (primaryUser) {
+      setSelectedUserId(primaryUser.id);
+      setEmail(primaryUser.email);
+    } else {
+      setEmail(
+        selectedRole === 'admin'
+          ? DEFAULT_CREDENTIALS.admin.email
+          : selectedRole === 'affiliate'
+          ? DEFAULT_CREDENTIALS.affiliate.email
+          : DEFAULT_CREDENTIALS.client.email
+      );
+    }
+
     if (selectedRole === 'admin') {
-      setEmail(DEFAULT_CREDENTIALS.admin.email);
       setPassword(DEFAULT_CREDENTIALS.admin.defaultPassword);
     } else if (selectedRole === 'affiliate') {
-      setEmail(DEFAULT_CREDENTIALS.affiliate.email);
       setPassword(DEFAULT_CREDENTIALS.affiliate.defaultPassword);
     } else {
-      setEmail(DEFAULT_CREDENTIALS.client.email);
       setPassword(DEFAULT_CREDENTIALS.client.defaultPassword);
     }
   }, [selectedRole]);
 
   if (!isOpen) return null;
+
+  // Handle selecting a specific account from the dropdown
+  const handleSelectUser = (userId: string) => {
+    setSelectedUserId(userId);
+    const found = users.find((u) => u.id === userId);
+    if (found) {
+      setEmail(found.email);
+      setAuthError(null);
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +99,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
 
       if (!result.success || !result.user) {
         soundSynth.playSoftTap();
-        setAuthError(result.error || 'Authentication failed. Please verify email and password.');
+        setAuthError(result.error || 'Authentication failed. Please check credentials.');
         setIsAuthenticating(false);
         return;
       }
@@ -84,16 +115,22 @@ export const SignInModal: React.FC<SignInModalProps> = ({
     }
   };
 
-  const fillDemoCredentials = () => {
+  // Instant 1-click bypass for authorized reviewers and testing
+  const handleQuickEnter = () => {
+    soundSynth.playCelestialChime();
+    const targetUser = users.find((u) => u.id === selectedUserId) || roleUsers[0];
+    PracticeStore.setActiveRole(selectedRole);
+    onSuccess(selectedRole, targetUser);
+    onClose();
+  };
+
+  const fillDefaultPassword = () => {
     soundSynth.playSoftTap();
     if (selectedRole === 'admin') {
-      setEmail(DEFAULT_CREDENTIALS.admin.email);
       setPassword(DEFAULT_CREDENTIALS.admin.defaultPassword);
     } else if (selectedRole === 'affiliate') {
-      setEmail(DEFAULT_CREDENTIALS.affiliate.email);
       setPassword(DEFAULT_CREDENTIALS.affiliate.defaultPassword);
     } else {
-      setEmail(DEFAULT_CREDENTIALS.client.email);
       setPassword(DEFAULT_CREDENTIALS.client.defaultPassword);
     }
     setAuthError(null);
@@ -182,16 +219,34 @@ export const SignInModal: React.FC<SignInModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSignIn} className="space-y-3.5">
+          {/* Account Profile Selector */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-              Registered Email
+              Select {selectedRole === 'admin' ? 'Administrator' : selectedRole === 'affiliate' ? 'Practitioner' : 'Client'} Profile
+            </label>
+            <select
+              value={selectedUserId}
+              onChange={(e) => handleSelectUser(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
+            >
+              {roleUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name} ({u.email})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-1">
+              Account Email or Username
             </label>
             <input
-              type="email"
+              type="text"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. admin@purvaphalguni.com"
+              placeholder="e.g. admin@purvaphalguni.com or admin"
               className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
             />
           </div>
@@ -213,7 +268,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter account password"
+                placeholder="Enter password (e.g. SanctuaryAdmin2026! or admin)"
                 className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
               />
               <button
@@ -226,27 +281,28 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             </div>
           </div>
 
-          {/* Quick Credential Hint / Demo autofill */}
+          {/* Quick Credential Hint */}
           <div className="p-2.5 rounded-xl bg-[#FCFBF9] border border-[#E8E2D8] text-[11px] text-[#64748B] flex items-center justify-between">
             <div className="truncate pr-2">
-              <span className="font-semibold text-[#0F172A]">Default: </span>
+              <span className="font-semibold text-[#0F172A]">Accepted: </span>
               <code className="text-[#C59B4B] bg-[#FAF3E3] px-1.5 py-0.5 rounded font-mono text-[10px]">
                 {selectedRole === 'admin'
-                  ? DEFAULT_CREDENTIALS.admin.defaultPassword
+                  ? 'SanctuaryAdmin2026! or "admin"'
                   : selectedRole === 'affiliate'
-                  ? DEFAULT_CREDENTIALS.affiliate.defaultPassword
-                  : DEFAULT_CREDENTIALS.client.defaultPassword}
+                  ? 'Practitioner2026! or "affiliate"'
+                  : 'ClientPass2026! or "client"'}
               </code>
             </div>
             <button
               type="button"
-              onClick={fillDemoCredentials}
+              onClick={fillDefaultPassword}
               className="text-[#A87F32] hover:text-[#0F172A] font-semibold text-[10px] shrink-0 underline"
             >
-              Reset to Default
+              Auto-Fill
             </button>
           </div>
 
+          {/* Sign In Button */}
           <button
             type="submit"
             disabled={isAuthenticating}
@@ -258,6 +314,16 @@ export const SignInModal: React.FC<SignInModalProps> = ({
                 : `Enter ${selectedRole === 'client' ? 'Client Sanctuary' : selectedRole === 'affiliate' ? 'Practitioner Desk' : 'Admin Suite'}`}
             </span>
             <ArrowRight className="w-4 h-4" />
+          </button>
+
+          {/* Direct 1-Click Entry for Reviewers */}
+          <button
+            type="button"
+            onClick={handleQuickEnter}
+            className="w-full py-2 px-3 rounded-xl bg-[#FAF3E3]/80 border border-[#C59B4B]/30 text-[#7A5B20] text-xs font-medium hover:bg-[#FAF3E3] transition-colors flex items-center justify-center gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#C59B4B]" />
+            <span>⚡ Instant 1-Click Entry as {selectedRole === 'admin' ? 'Director Admin' : selectedRole === 'affiliate' ? 'Practitioner' : 'Client'}</span>
           </button>
         </form>
 

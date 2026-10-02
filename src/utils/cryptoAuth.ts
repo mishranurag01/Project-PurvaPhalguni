@@ -79,14 +79,20 @@ export async function verifyPassword(password: string, storedHash: string, salt:
 export const DEFAULT_CREDENTIALS = {
   admin: {
     email: 'admin@purvaphalguni.com',
-    defaultPassword: 'SanctuaryAdmin2026!'
+    secondaryEmail: 'admin.demo@example.com',
+    defaultPassword: 'SanctuaryAdmin2026!',
+    simplePassword: 'admin'
   },
   affiliate: {
-    email: 'affiliate1@example.com',
-    defaultPassword: 'Practitioner2026!'
+    email: 'affiliate@purvaphalguni.com',
+    secondaryEmail: 'demo.affiliate1@example.com',
+    defaultPassword: 'Practitioner2026!',
+    simplePassword: 'affiliate'
   },
   client: {
-    email: 'demo.client@example.com',
-    defaultPassword: 'ClientPass2026!'
+    email: 'client@purvaphalguni.com',
+    secondaryEmail: 'demo.client1@example.com',
+    defaultPassword: 'ClientPass2026!',
+    simplePassword: 'client'
   }
 };
