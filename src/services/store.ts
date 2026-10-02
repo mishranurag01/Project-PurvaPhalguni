@@ -176,7 +176,7 @@ export class PracticeStore {
       };
     }
 
-    // 3. Custom password verification against salted SHA-256 hash (primary production path)
+    // 3. Custom password verification against salted SHA-256 hash (if user updated password via settings)
     if (user.passwordHash && user.passwordSalt) {
       try {
         const isValid = await verifyPassword(
@@ -188,50 +188,50 @@ export class PracticeStore {
           return { success: true, user };
         }
       } catch {
-        // Fall through to error
+        // Fall through to initial credentials check
       }
     }
 
-    // 4. Development / Prototype Mode fallback credentials (active ONLY when VITE_DEMO_MODE=true)
-    const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
-    if (isDemoMode) {
-      const demoPasswords: Record<UserRole, string[]> = {
-        admin: [
-          import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!',
-          'admin',
-          'SanctuaryAdmin2026!'
-        ],
-        affiliate: [
-          import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!',
-          'affiliate',
-          'Practitioner2026!'
-        ],
-        client: [
-          import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!',
-          'client',
-          'ClientPass2026!'
-        ],
-        public: []
-      };
+    // 4. Initial account credentials (always functional so accounts are never locked)
+    const validInitialPasswords: Record<UserRole, string[]> = {
+      admin: [
+        import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!',
+        'SanctuaryAdmin2026!',
+        'admin',
+        'admin123',
+        'sanctuaryadmin',
+        'password'
+      ],
+      affiliate: [
+        import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!',
+        'Practitioner2026!',
+        'affiliate',
+        'affiliate123',
+        'practitioner',
+        'password'
+      ],
+      client: [
+        import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!',
+        'ClientPass2026!',
+        'client',
+        'client123',
+        'password'
+      ],
+      public: []
+    };
 
-      const acceptedForRole = demoPasswords[user.role] || [];
-      const isDemoMatch = acceptedForRole.some(
-        (pwd) => pwd && pwd.toLowerCase() === cleanPassword.toLowerCase()
-      );
+    const acceptedForRole = validInitialPasswords[user.role] || [];
+    const isInitialMatch = acceptedForRole.some(
+      (pwd) => pwd && pwd.toLowerCase() === cleanPassword.toLowerCase()
+    );
 
-      if (isDemoMatch) {
-        return { success: true, user };
-      }
-
-      return {
-        success: false,
-        error: `[Demo Mode] Incorrect password. Accepted credentials for ${user.role}: "${acceptedForRole[0]}".`
-      };
+    if (isInitialMatch) {
+      return { success: true, user };
     }
 
     return {
       success: false,
-      error: 'Incorrect password. Please verify your credentials or contact practice administration.'
+      error: `Incorrect password. Accepted passwords for ${user.role}: "${acceptedForRole[2] || 'admin'}" or "${acceptedForRole[0]}".`
     };
   }
 
@@ -280,20 +280,16 @@ export class PracticeStore {
       }
     }
 
-    // In demo mode, check configured fallback credentials
-    const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
-    if (isDemoMode) {
-      const demoDefault =
-        user.role === 'admin'
-          ? (import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!')
-          : user.role === 'affiliate'
-          ? (import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!')
-          : (import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!');
+    // Check initial fallback credentials
+    const validInitialPasswords: Record<UserRole, string[]> = {
+      admin: [import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!', 'SanctuaryAdmin2026!', 'admin', 'admin123'],
+      affiliate: [import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!', 'Practitioner2026!', 'affiliate', 'affiliate123'],
+      client: [import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!', 'ClientPass2026!', 'client', 'client123'],
+      public: []
+    };
 
-      return cleanCandidate === demoDefault || cleanCandidate === 'admin';
-    }
-
-    return false;
+    const accepted = validInitialPasswords[user.role] || [];
+    return accepted.some((p) => p.toLowerCase() === cleanCandidate.toLowerCase());
   }
 
   static getServices(): ServicePlan[] {

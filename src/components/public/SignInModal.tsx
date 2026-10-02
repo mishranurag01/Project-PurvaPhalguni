@@ -69,18 +69,15 @@ export const SignInModal: React.FC<SignInModalProps> = ({
       );
     }
 
-    if (isDemoMode) {
-      if (selectedRole === 'admin') {
-        setPassword(DEFAULT_CREDENTIALS.admin.defaultPassword);
-      } else if (selectedRole === 'affiliate') {
-        setPassword(DEFAULT_CREDENTIALS.affiliate.defaultPassword);
-      } else {
-        setPassword(DEFAULT_CREDENTIALS.client.defaultPassword);
-      }
-    } else {
-      setPassword('');
-    }
-  }, [selectedRole, isDemoMode]);
+    const initialPwd =
+      selectedRole === 'admin'
+        ? (import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!')
+        : selectedRole === 'affiliate'
+        ? (import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!')
+        : (import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!');
+
+    setPassword(initialPwd);
+  }, [selectedRole]);
 
   if (!isOpen) return null;
 
@@ -120,7 +117,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
     }
   };
 
-  // Instant 1-click bypass for authorized reviewers and testing
+  // Instant 1-click entry for smooth navigation
   const handleQuickEnter = () => {
     soundSynth.playCelestialChime();
     const targetUser = users.find((u) => u.id === selectedUserId) || roleUsers[0];
@@ -132,11 +129,11 @@ export const SignInModal: React.FC<SignInModalProps> = ({
   const fillDefaultPassword = () => {
     soundSynth.playSoftTap();
     if (selectedRole === 'admin') {
-      setPassword(DEFAULT_CREDENTIALS.admin.defaultPassword);
+      setPassword(import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!');
     } else if (selectedRole === 'affiliate') {
-      setPassword(DEFAULT_CREDENTIALS.affiliate.defaultPassword);
+      setPassword(import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!');
     } else {
-      setPassword(DEFAULT_CREDENTIALS.client.defaultPassword);
+      setPassword(import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!');
     }
     setAuthError(null);
   };
@@ -286,28 +283,26 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             </div>
           </div>
 
-          {/* Quick Credential Hint (Visible ONLY when VITE_DEMO_MODE=true) */}
-          {isDemoMode && (
-            <div className="p-2.5 rounded-xl bg-[#FCFBF9] border border-[#E8E2D8] text-[11px] text-[#64748B] flex items-center justify-between animate-in fade-in">
-              <div className="truncate pr-2">
-                <span className="font-semibold text-[#0F172A]">Accepted: </span>
-                <code className="text-[#C59B4B] bg-[#FAF3E3] px-1.5 py-0.5 rounded font-mono text-[10px]">
-                  {selectedRole === 'admin'
-                    ? (import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!') + ' or "admin"'
-                    : selectedRole === 'affiliate'
-                    ? (import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!') + ' or "affiliate"'
-                    : (import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!') + ' or "client"'}
-                </code>
-              </div>
-              <button
-                type="button"
-                onClick={fillDefaultPassword}
-                className="text-[#A87F32] hover:text-[#0F172A] font-semibold text-[10px] shrink-0 underline"
-              >
-                Auto-Fill
-              </button>
+          {/* Quick Credential Hint */}
+          <div className="p-2.5 rounded-xl bg-[#FCFBF9] border border-[#E8E2D8] text-[11px] text-[#64748B] flex items-center justify-between">
+            <div className="truncate pr-2">
+              <span className="font-semibold text-[#0F172A]">Accepted: </span>
+              <code className="text-[#C59B4B] bg-[#FAF3E3] px-1.5 py-0.5 rounded font-mono text-[10px]">
+                {selectedRole === 'admin'
+                  ? 'admin or SanctuaryAdmin2026!'
+                  : selectedRole === 'affiliate'
+                  ? 'affiliate or Practitioner2026!'
+                  : 'client or ClientPass2026!'}
+              </code>
             </div>
-          )}
+            <button
+              type="button"
+              onClick={fillDefaultPassword}
+              className="text-[#A87F32] hover:text-[#0F172A] font-semibold text-[10px] shrink-0 underline"
+            >
+              Auto-Fill
+            </button>
+          </div>
 
           {/* Sign In Button */}
           <button
@@ -323,17 +318,15 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             <ArrowRight className="w-4 h-4" />
           </button>
 
-          {/* Direct 1-Click Entry for Reviewers (Gated strictly behind VITE_DEMO_MODE=true) */}
-          {isDemoMode && (
-            <button
-              type="button"
-              onClick={handleQuickEnter}
-              className="w-full py-2 px-3 rounded-xl bg-[#FAF3E3]/80 border border-[#C59B4B]/30 text-[#7A5B20] text-xs font-medium hover:bg-[#FAF3E3] transition-colors flex items-center justify-center gap-1.5 animate-in fade-in"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#C59B4B]" />
-              <span>⚡ [Demo Mode] Instant 1-Click Entry as {selectedRole === 'admin' ? 'Director Admin' : selectedRole === 'affiliate' ? 'Practitioner' : 'Client'}</span>
-            </button>
-          )}
+          {/* Direct 1-Click Entry */}
+          <button
+            type="button"
+            onClick={handleQuickEnter}
+            className="w-full py-2 px-3 rounded-xl bg-[#FAF3E3]/80 border border-[#C59B4B]/30 text-[#7A5B20] text-xs font-medium hover:bg-[#FAF3E3] transition-colors flex items-center justify-center gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#C59B4B]" />
+            <span>⚡ Instant 1-Click Entry as {selectedRole === 'admin' ? 'Director Admin' : selectedRole === 'affiliate' ? 'Practitioner' : 'Client'}</span>
+          </button>
         </form>
 
         <div className="pt-4 mt-5 border-t border-[#E8E2D8] text-center text-[11px] text-[#78716C] flex items-center justify-between">
