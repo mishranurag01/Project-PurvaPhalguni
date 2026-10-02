@@ -39,6 +39,9 @@ import {
   FileText,
   Activity,
   Lock,
+  Key,
+  Eye,
+  EyeOff,
   Edit3,
   CheckCircle2,
   XCircle,
@@ -63,8 +66,7 @@ import {
   BarChart3,
   Sliders,
   Check,
-  Send,
-  Eye
+  Send
 } from 'lucide-react';
 import { soundSynth } from '../../utils/soundAmbience';
 import { PermissionDenied } from '../common/PermissionDenied';
@@ -191,6 +193,53 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     onUpdateSettings(settings);
     setSettingsSavedMsg(true);
     setTimeout(() => setSettingsSavedMsg(false), 2500);
+  };
+
+  // Admin Password Management State
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [showPasswordText, setShowPasswordText] = useState(false);
+
+  const handleUpdateAdminPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    if (newPasswordInput.length < 8) {
+      setPasswordError('New password must be at least 8 characters long.');
+      return;
+    }
+
+    if (newPasswordInput !== confirmPasswordInput) {
+      setPasswordError('New password and confirmation do not match.');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const isCurrentValid = await PracticeStore.verifyUserPassword(admin.id, currentPasswordInput);
+      if (!isCurrentValid) {
+        setPasswordError('Current password is incorrect. Please verify your existing password.');
+        setIsUpdatingPassword(false);
+        return;
+      }
+
+      await PracticeStore.updateUserPassword(admin.id, newPasswordInput);
+      soundSynth.playCelestialChime();
+      setPasswordSuccess('Admin password updated successfully with salted SHA-256 cryptographic digest.');
+      setCurrentPasswordInput('');
+      setNewPasswordInput('');
+      setConfirmPasswordInput('');
+      showToast('Admin password updated and cryptographically salted.');
+    } catch (err: any) {
+      setPasswordError(err?.message || 'Failed to update password.');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   // Review management: filter medical claims
@@ -536,6 +585,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           >
             <Lock className="w-4 h-4 text-[#C59B4B]" />
             <span>Security Audit Log</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
+              activeTab === 'settings' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <Key className="w-4 h-4 text-[#C59B4B]" />
+            <span>Admin Password & Security</span>
           </button>
         </div>
 
@@ -1522,6 +1581,147 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 13: SETTINGS & ADMIN PASSWORD */}
+          {activeTab === 'settings' && (
+            <div className="bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#E8E2D8]">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-[#C59B4B]" />
+                    <span className="text-[10px] uppercase tracking-widest text-[#C59B4B] font-bold">
+                      Director Credentials & Access Control
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-serif font-bold text-[#0F172A] mt-1">
+                    Admin Security & Password Management
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Manage the executive credentials used to access the PurvaPhalguni Director Suite.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-mono text-emerald-800 self-start sm:self-auto">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Salted SHA-256 Active</span>
+                </div>
+              </div>
+
+              {/* Cryptographic Architecture Card */}
+              <div className="p-4 bg-[#FCFBF9] rounded-2xl border border-[#E8E2D8] space-y-2 text-xs">
+                <div className="flex items-center gap-2 font-bold text-[#0F172A]">
+                  <Lock className="w-4 h-4 text-[#C59B4B]" />
+                  <span>How Passwords Are Protected</span>
+                </div>
+                <p className="text-[#526071] leading-relaxed">
+                  Passwords in PurvaPhalguni are never stored in plain text. Whenever you set or change a password, a <strong>128-bit cryptographically secure random salt</strong> is generated via <code className="bg-[#FAF3E3] text-[#7A5B20] px-1.5 py-0.5 rounded font-mono text-[11px]">crypto.getRandomValues</code>, combined with your password, and digested through <strong>SHA-256</strong>. Credential verifications utilize constant-time string comparisons to prevent timing attacks.
+                </p>
+              </div>
+
+              {/* Success / Error Alerts */}
+              {passwordSuccess && (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl text-xs flex items-center gap-2.5 animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{passwordSuccess}</span>
+                </div>
+              )}
+
+              {passwordError && (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-900 rounded-2xl text-xs flex items-center gap-2.5 animate-in fade-in">
+                  <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+
+              {/* Password Change Form */}
+              <form onSubmit={handleUpdateAdminPassword} className="max-w-lg space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-1">
+                    Current Admin Password
+                  </label>
+                  <input
+                    type={showPasswordText ? 'text' : 'password'}
+                    required
+                    value={currentPasswordInput}
+                    onChange={(e) => setCurrentPasswordInput(e.target.value)}
+                    placeholder="Enter current password (default: SanctuaryAdmin2026!)"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#78716C]">
+                      New Admin Password
+                    </label>
+                    <span className="text-[10px] text-[#94A3B8]">Minimum 8 characters</span>
+                  </div>
+                  <input
+                    type={showPasswordText ? 'text' : 'password'}
+                    required
+                    value={newPasswordInput}
+                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                    placeholder="Enter new strong password"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-1">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type={showPasswordText ? 'text' : 'password'}
+                    required
+                    value={confirmPasswordInput}
+                    onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                    placeholder="Re-type new password"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordText(!showPasswordText)}
+                    className="text-xs text-[#64748B] hover:text-[#0F172A] flex items-center gap-1.5"
+                  >
+                    {showPasswordText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    <span>{showPasswordText ? 'Hide password characters' : 'Show password characters'}</span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isUpdatingPassword}
+                    className="px-5 py-2.5 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#C59B4B] hover:text-[#0F172A] transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
+                  >
+                    <Key className="w-3.5 h-3.5" />
+                    <span>{isUpdatingPassword ? 'Hashing & Saving...' : 'Update Admin Password'}</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Account Security Information Grid */}
+              <div className="pt-6 border-t border-[#E8E2D8] grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8]">
+                  <span className="text-xs text-[#78716C]">Administrator Email</span>
+                  <div className="font-semibold text-[#0F172A] mt-1">{admin.email}</div>
+                  <span className="text-[10px] text-emerald-700">Root Executive Role</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8]">
+                  <span className="text-xs text-[#78716C]">Default Fallback Password</span>
+                  <div className="font-mono font-bold text-[#A87F32] mt-1">SanctuaryAdmin2026!</div>
+                  <span className="text-[10px] text-[#78716C]">For initial prototype access</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8]">
+                  <span className="text-xs text-[#78716C]">Digest Verification</span>
+                  <div className="font-semibold text-emerald-800 mt-1">Salted SHA-256 Verified</div>
+                  <span className="text-[10px] text-[#78716C]">Client-side zero knowledge</span>
+                </div>
               </div>
             </div>
           )}

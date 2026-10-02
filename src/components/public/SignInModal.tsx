@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserRole, UserProfile } from '../../types/practice';
 import { PracticeStore } from '../../services/store';
 import { soundSynth } from '../../utils/soundAmbience';
+import { DEFAULT_CREDENTIALS } from '../../utils/cryptoAuth';
 import {
   X,
   Lock,
@@ -10,7 +11,11 @@ import {
   Sparkles,
   AlertTriangle,
   ArrowRight,
-  Briefcase
+  Briefcase,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  Key
 } from 'lucide-react';
 
 interface SignInModalProps {
@@ -26,33 +31,72 @@ export const SignInModal: React.FC<SignInModalProps> = ({
   onSuccess,
   initialRoleChoice = 'client'
 }) => {
+  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
   const [selectedRole, setSelectedRole] = useState<'client' | 'affiliate' | 'admin'>(initialRoleChoice);
   const users = PracticeStore.getUsers();
 
-  const clientUsers = users.filter((u) => u.role === 'client');
-  const affiliateUsers = users.filter((u) => u.role === 'affiliate' && u.activeStatus !== 'deactivated');
-  const adminUsers = users.filter((u) => u.role === 'admin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  // Sync default credentials when role changes
+  useEffect(() => {
+    setAuthError(null);
+    if (selectedRole === 'admin') {
+      setEmail(DEFAULT_CREDENTIALS.admin.email);
+      setPassword(DEFAULT_CREDENTIALS.admin.defaultPassword);
+    } else if (selectedRole === 'affiliate') {
+      setEmail(DEFAULT_CREDENTIALS.affiliate.email);
+      setPassword(DEFAULT_CREDENTIALS.affiliate.defaultPassword);
+    } else {
+      setEmail(DEFAULT_CREDENTIALS.client.email);
+      setPassword(DEFAULT_CREDENTIALS.client.defaultPassword);
+    }
+  }, [selectedRole]);
 
   if (!isOpen) return null;
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    soundSynth.playCelestialChime();
+    setAuthError(null);
+    setIsAuthenticating(true);
 
-    let targetUser: UserProfile | undefined;
-    if (selectedUserId) {
-      targetUser = users.find((u) => u.id === selectedUserId);
-    } else {
-      if (selectedRole === 'client') targetUser = clientUsers[0];
-      if (selectedRole === 'affiliate') targetUser = affiliateUsers[0];
-      if (selectedRole === 'admin') targetUser = adminUsers[0];
+    try {
+      const result = await PracticeStore.authenticateUser(email, password, selectedRole);
+
+      if (!result.success || !result.user) {
+        soundSynth.playSoftTap();
+        setAuthError(result.error || 'Authentication failed. Please verify email and password.');
+        setIsAuthenticating(false);
+        return;
+      }
+
+      soundSynth.playCelestialChime();
+      PracticeStore.setActiveRole(selectedRole);
+      onSuccess(selectedRole, result.user);
+      onClose();
+    } catch (err: any) {
+      setAuthError(err?.message || 'Unexpected authentication error.');
+    } finally {
+      setIsAuthenticating(false);
     }
+  };
 
-    PracticeStore.setActiveRole(selectedRole);
-    onSuccess(selectedRole, targetUser);
-    onClose();
+  const fillDemoCredentials = () => {
+    soundSynth.playSoftTap();
+    if (selectedRole === 'admin') {
+      setEmail(DEFAULT_CREDENTIALS.admin.email);
+      setPassword(DEFAULT_CREDENTIALS.admin.defaultPassword);
+    } else if (selectedRole === 'affiliate') {
+      setEmail(DEFAULT_CREDENTIALS.affiliate.email);
+      setPassword(DEFAULT_CREDENTIALS.affiliate.defaultPassword);
+    } else {
+      setEmail(DEFAULT_CREDENTIALS.client.email);
+      setPassword(DEFAULT_CREDENTIALS.client.defaultPassword);
+    }
+    setAuthError(null);
   };
 
   return (
@@ -73,26 +117,16 @@ export const SignInModal: React.FC<SignInModalProps> = ({
           </div>
           <h3 className="font-serif font-bold text-2xl text-[#0F172A]">Practice Sign In</h3>
           <p className="text-xs text-[#64748B] max-w-sm mx-auto">
-            Select your account type to access your private consultation sanctuary or practice desk.
+            Access your private consultation sanctuary, practitioner caseload, or director suite.
           </p>
         </div>
 
-        {/* Prototype Truthfulness Notice */}
-        <div className="my-4 p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="leading-relaxed">
-            <strong className="block font-semibold">Demonstration Authentication Screen</strong>
-            This is a prototype authentication view. A real authentication provider (e.g. OAuth / Identity Provider) is not yet connected. Do not enter real passwords or personal credentials.
-          </div>
-        </div>
-
         {/* Role Selector Tabs (3 Choices) */}
-        <div className="grid grid-cols-3 gap-2 p-1.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8] mb-5">
+        <div className="grid grid-cols-3 gap-2 p-1.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8] my-4">
           <button
             type="button"
             onClick={() => {
               setSelectedRole('client');
-              setSelectedUserId(clientUsers[0]?.id || '');
               soundSynth.playSoftTap();
             }}
             className={`py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition-all ${
@@ -109,7 +143,6 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             type="button"
             onClick={() => {
               setSelectedRole('affiliate');
-              setSelectedUserId(affiliateUsers[0]?.id || '');
               soundSynth.playSoftTap();
             }}
             className={`py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition-all ${
@@ -126,7 +159,6 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             type="button"
             onClick={() => {
               setSelectedRole('admin');
-              setSelectedUserId(adminUsers[0]?.id || '');
               soundSynth.playSoftTap();
             }}
             className={`py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition-all ${
@@ -140,69 +172,98 @@ export const SignInModal: React.FC<SignInModalProps> = ({
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSignIn} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-1.5">
-              Select Demo Profile
-            </label>
-            <select
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
-            >
-              {selectedRole === 'client' &&
-                clientUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} — {u.email}
-                  </option>
-                ))}
-
-              {selectedRole === 'affiliate' &&
-                affiliateUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.specialty}) — {u.email}
-                  </option>
-                ))}
-
-              {selectedRole === 'admin' &&
-                adminUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} — {u.email} (Full Platform Access)
-                  </option>
-                ))}
-            </select>
+        {/* Auth Error Banner */}
+        {authError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs flex items-start gap-2 animate-in fade-in">
+            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <span className="leading-snug">{authError}</span>
           </div>
+        )}
 
-          <div className="space-y-1">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#78716C]">
-              Demo Password
+        {/* Form Body */}
+        <form onSubmit={handleSignIn} className="space-y-3.5">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-1">
+              Registered Email
             </label>
             <input
-              type="password"
-              value="••••••••••••"
-              disabled
-              className="w-full px-3.5 py-2 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5]/60 text-xs text-[#94A3B8] cursor-not-allowed"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="e.g. admin@purvaphalguni.com"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
             />
-            <span className="text-[10px] text-[#94A3B8] block">
-              Pre-filled demo credentials for session evaluation.
-            </span>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[#78716C]">
+                Password
+              </label>
+              <span className="text-[10px] text-emerald-800 font-mono flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                <span>Salted SHA-256</span>
+              </span>
+            </div>
+
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter account password"
+                className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A]"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Credential Hint / Demo autofill */}
+          <div className="p-2.5 rounded-xl bg-[#FCFBF9] border border-[#E8E2D8] text-[11px] text-[#64748B] flex items-center justify-between">
+            <div className="truncate pr-2">
+              <span className="font-semibold text-[#0F172A]">Default: </span>
+              <code className="text-[#C59B4B] bg-[#FAF3E3] px-1.5 py-0.5 rounded font-mono text-[10px]">
+                {selectedRole === 'admin'
+                  ? DEFAULT_CREDENTIALS.admin.defaultPassword
+                  : selectedRole === 'affiliate'
+                  ? DEFAULT_CREDENTIALS.affiliate.defaultPassword
+                  : DEFAULT_CREDENTIALS.client.defaultPassword}
+              </code>
+            </div>
+            <button
+              type="button"
+              onClick={fillDemoCredentials}
+              className="text-[#A87F32] hover:text-[#0F172A] font-semibold text-[10px] shrink-0 underline"
+            >
+              Reset to Default
+            </button>
           </div>
 
           <button
             type="submit"
-            className="w-full mt-2 py-3 px-4 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#C59B4B] hover:text-[#0F172A] transition-colors flex items-center justify-center gap-2 shadow-sm"
+            disabled={isAuthenticating}
+            className="w-full mt-2 py-3 px-4 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#C59B4B] hover:text-[#0F172A] transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
           >
-            <span>Enter {selectedRole === 'client' ? 'Client Sanctuary' : selectedRole === 'affiliate' ? 'Practitioner Desk' : 'Admin Suite'}</span>
+            <span>
+              {isAuthenticating
+                ? 'Verifying Hash...'
+                : `Enter ${selectedRole === 'client' ? 'Client Sanctuary' : selectedRole === 'affiliate' ? 'Practitioner Desk' : 'Admin Suite'}`}
+            </span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
-        <div className="pt-4 mt-5 border-t border-[#E8E2D8] text-center text-[11px] text-[#78716C]">
-          <span>Need help? Contact practice administration at </span>
-          <a href="mailto:demo@example.com" className="text-[#C59B4B] hover:underline font-mono">
-            demo@example.com
-          </a>
+        <div className="pt-4 mt-5 border-t border-[#E8E2D8] text-center text-[11px] text-[#78716C] flex items-center justify-between">
+          <span>Admin passwords can be changed in Admin Suite Settings.</span>
+          <span className="font-mono text-[10px] text-[#A87F32]">v2.4 Cryptographic</span>
         </div>
       </div>
     </div>

@@ -37,6 +37,7 @@ import {
   DEMO_BULLETINS,
   DEMO_PAYOUTS
 } from './demoData';
+import { hashPassword, verifyPassword, DEFAULT_CREDENTIALS } from '../utils/cryptoAuth';
 
 // Re-export aliases for backwards compatibility
 export const INITIAL_SETTINGS = DEMO_SETTINGS;
@@ -127,6 +128,113 @@ export class PracticeStore {
   static saveUsers(users: UserProfile[]): void {
     this.save('users', users);
     this.notifySync('USERS_UPDATED', users);
+  }
+
+  /**
+   * Cryptographic Authentication with Salted SHA-256
+   */
+  static async authenticateUser(
+    email: string,
+    passwordCandidate: string,
+    expectedRole?: UserRole
+  ): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
+    const users = this.getUsers();
+    const user = users.find(
+      (u) => u.email.toLowerCase().trim() === email.toLowerCase().trim()
+    );
+
+    if (!user) {
+      return { success: false, error: 'No account found matching this email address.' };
+    }
+
+    if (expectedRole && user.role !== expectedRole) {
+      return {
+        success: false,
+        error: `This account is registered with role "${user.role}", not "${expectedRole}".`
+      };
+    }
+
+    if (user.activeStatus === 'deactivated' || user.activeStatus === 'suspended') {
+      return {
+        success: false,
+        error: `This practitioner account is currently ${user.activeStatus}. Please contact the practice director.`
+      };
+    }
+
+    // Lazy initialize default salted hash if user doesn't have one
+    if (!user.passwordHash || !user.passwordSalt) {
+      const defaultPwd =
+        user.role === 'admin'
+          ? DEFAULT_CREDENTIALS.admin.defaultPassword
+          : user.role === 'affiliate'
+          ? DEFAULT_CREDENTIALS.affiliate.defaultPassword
+          : DEFAULT_CREDENTIALS.client.defaultPassword;
+
+      const { hash, salt } = await hashPassword(defaultPwd);
+      user.passwordHash = hash;
+      user.passwordSalt = salt;
+      user.passwordLastChanged = new Date().toISOString();
+      this.saveUsers(users);
+    }
+
+    const isValid = await verifyPassword(
+      passwordCandidate,
+      user.passwordHash!,
+      user.passwordSalt!
+    );
+
+    if (!isValid) {
+      return { success: false, error: 'Incorrect password. Please verify your credentials.' };
+    }
+
+    return { success: true, user };
+  }
+
+  /**
+   * Update User Password with fresh cryptographic salt and SHA-256 hash
+   */
+  static async updateUserPassword(userId: string, newPasswordPlain: string): Promise<boolean> {
+    const users = this.getUsers();
+    const idx = users.findIndex((u) => u.id === userId);
+    if (idx === -1) return false;
+
+    const { hash, salt } = await hashPassword(newPasswordPlain);
+    users[idx] = {
+      ...users[idx],
+      passwordHash: hash,
+      passwordSalt: salt,
+      passwordLastChanged: new Date().toISOString()
+    };
+
+    this.saveUsers(users);
+    this.logAction(
+      userId,
+      users[idx].name,
+      users[idx].role,
+      'PASSWORD_CHANGED',
+      `Password updated with salted SHA-256 cryptographic digest.`
+    );
+    return true;
+  }
+
+  /**
+   * Verify an existing password before allowing password change
+   */
+  static async verifyUserPassword(userId: string, candidatePassword: string): Promise<boolean> {
+    const user = this.getUsers().find((u) => u.id === userId);
+    if (!user) return false;
+
+    if (!user.passwordHash || !user.passwordSalt) {
+      const defaultPwd =
+        user.role === 'admin'
+          ? DEFAULT_CREDENTIALS.admin.defaultPassword
+          : user.role === 'affiliate'
+          ? DEFAULT_CREDENTIALS.affiliate.defaultPassword
+          : DEFAULT_CREDENTIALS.client.defaultPassword;
+      return candidatePassword === defaultPwd;
+    }
+
+    return verifyPassword(candidatePassword, user.passwordHash, user.passwordSalt);
   }
 
   static getServices(): ServicePlan[] {

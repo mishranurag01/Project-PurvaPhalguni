@@ -141,6 +141,10 @@ export interface UserProfile {
   payoutMethodPreference?: PayoutMethod;
   payoutAccountDetails?: string;
   workCapacity?: string;
+  // Authentication & Security (Cryptographically Hashed)
+  passwordHash?: string;
+  passwordSalt?: string;
+  passwordLastChanged?: string;
 }
 
 export interface ServicePlan {
@@ -318,7 +322,8 @@ export interface AuditLogEntry {
     | 'AFFILIATE_DEACTIVATED'
     | 'AFFILIATE_REACTIVATED'
     | 'PAYOUT_DISBURSED'
-    | 'BULLETIN_PUBLISHED';
+    | 'BULLETIN_PUBLISHED'
+    | 'PASSWORD_CHANGED';
   details: string;
   ipAddress: string;
   isSensitive: boolean;
