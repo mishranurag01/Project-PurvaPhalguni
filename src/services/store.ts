@@ -176,24 +176,7 @@ export class PracticeStore {
       };
     }
 
-    // 3. Accepted standard passwords for instant reliable access
-    const standardPasswords: Record<UserRole, string[]> = {
-      admin: ['SanctuaryAdmin2026!', 'admin', 'admin123', 'sanctuaryadmin', 'password'],
-      affiliate: ['Practitioner2026!', 'affiliate', 'affiliate123', 'practitioner', 'password'],
-      client: ['ClientPass2026!', 'client', 'client123', 'password'],
-      public: []
-    };
-
-    const acceptedForRole = standardPasswords[user.role] || [];
-    const isStandardMatch = acceptedForRole.some(
-      (pwd) => pwd.toLowerCase() === cleanPassword.toLowerCase()
-    );
-
-    if (isStandardMatch) {
-      return { success: true, user };
-    }
-
-    // 4. Custom password verification against salted SHA-256 hash if admin updated password
+    // 3. Custom password verification against salted SHA-256 hash (primary production path)
     if (user.passwordHash && user.passwordSalt) {
       try {
         const isValid = await verifyPassword(
@@ -209,10 +192,46 @@ export class PracticeStore {
       }
     }
 
-    const defaultHint = acceptedForRole[0] || 'SanctuaryAdmin2026!';
+    // 4. Development / Prototype Mode fallback credentials (active ONLY when VITE_DEMO_MODE=true)
+    const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+    if (isDemoMode) {
+      const demoPasswords: Record<UserRole, string[]> = {
+        admin: [
+          import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!',
+          'admin',
+          'SanctuaryAdmin2026!'
+        ],
+        affiliate: [
+          import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!',
+          'affiliate',
+          'Practitioner2026!'
+        ],
+        client: [
+          import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!',
+          'client',
+          'ClientPass2026!'
+        ],
+        public: []
+      };
+
+      const acceptedForRole = demoPasswords[user.role] || [];
+      const isDemoMatch = acceptedForRole.some(
+        (pwd) => pwd && pwd.toLowerCase() === cleanPassword.toLowerCase()
+      );
+
+      if (isDemoMatch) {
+        return { success: true, user };
+      }
+
+      return {
+        success: false,
+        error: `[Demo Mode] Incorrect password. Accepted credentials for ${user.role}: "${acceptedForRole[0]}".`
+      };
+    }
+
     return {
       success: false,
-      error: `Incorrect password. Accepted passwords for ${user.role}: "${defaultHint}" or "${acceptedForRole[1] || 'admin'}".`
+      error: 'Incorrect password. Please verify your credentials or contact practice administration.'
     };
   }
 
@@ -252,25 +271,26 @@ export class PracticeStore {
 
     const cleanCandidate = (candidatePassword || '').trim();
 
-    // Check standard passwords
-    const standardPasswords: Record<UserRole, string[]> = {
-      admin: ['SanctuaryAdmin2026!', 'admin', 'admin123', 'sanctuaryadmin', 'password'],
-      affiliate: ['Practitioner2026!', 'affiliate', 'affiliate123', 'practitioner', 'password'],
-      client: ['ClientPass2026!', 'client', 'client123', 'password'],
-      public: []
-    };
-
-    const accepted = standardPasswords[user.role] || [];
-    if (accepted.some((p) => p.toLowerCase() === cleanCandidate.toLowerCase())) {
-      return true;
-    }
-
+    // Check custom password hash first
     if (user.passwordHash && user.passwordSalt) {
       try {
         return await verifyPassword(cleanCandidate, user.passwordHash, user.passwordSalt);
       } catch {
         return false;
       }
+    }
+
+    // In demo mode, check configured fallback credentials
+    const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+    if (isDemoMode) {
+      const demoDefault =
+        user.role === 'admin'
+          ? (import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!')
+          : user.role === 'affiliate'
+          ? (import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!')
+          : (import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!');
+
+      return cleanCandidate === demoDefault || cleanCandidate === 'admin';
     }
 
     return false;

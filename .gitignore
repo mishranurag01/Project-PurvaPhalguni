@@ -1,8 +1,33 @@
+# Dependencies
 node_modules/
-build/
+
+# Production build artifacts
 dist/
+build/
 coverage/
-.DS_Store
-*.log
-.env*
+
+# Sensitive environment configuration files
+.env
+.env.*
+.env*.local
+.env.production
+.env.development
 !.env.example
+
+# Private keys, certificates & credentials
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials.json
+
+# Operating System & Logs
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

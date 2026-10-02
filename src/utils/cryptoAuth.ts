@@ -76,23 +76,25 @@ export async function verifyPassword(password: string, storedHash: string, salt:
  * Affiliate:    affiliate1@example.com      -> Practitioner2026!
  * Client:       demo.client@example.com     -> ClientPass2026!
  */
+const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+
 export const DEFAULT_CREDENTIALS = {
   admin: {
-    email: 'admin@purvaphalguni.com',
+    email: import.meta.env.VITE_DEFAULT_ADMIN_EMAIL || 'admin@purvaphalguni.com',
     secondaryEmail: 'admin.demo@example.com',
-    defaultPassword: 'SanctuaryAdmin2026!',
-    simplePassword: 'admin'
+    defaultPassword: isDemoMode ? (import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!') : '',
+    simplePassword: isDemoMode ? 'admin' : ''
   },
   affiliate: {
-    email: 'affiliate@purvaphalguni.com',
+    email: import.meta.env.VITE_DEFAULT_AFFILIATE_EMAIL || 'affiliate@purvaphalguni.com',
     secondaryEmail: 'demo.affiliate1@example.com',
-    defaultPassword: 'Practitioner2026!',
-    simplePassword: 'affiliate'
+    defaultPassword: isDemoMode ? (import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!') : '',
+    simplePassword: isDemoMode ? 'affiliate' : ''
   },
   client: {
-    email: 'client@purvaphalguni.com',
+    email: import.meta.env.VITE_DEFAULT_CLIENT_EMAIL || 'client@purvaphalguni.com',
     secondaryEmail: 'demo.client1@example.com',
-    defaultPassword: 'ClientPass2026!',
-    simplePassword: 'client'
+    defaultPassword: isDemoMode ? (import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!') : '',
+    simplePassword: isDemoMode ? 'client' : ''
   }
 };

@@ -1646,7 +1646,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     required
                     value={currentPasswordInput}
                     onChange={(e) => setCurrentPasswordInput(e.target.value)}
-                    placeholder="Enter current password (default: SanctuaryAdmin2026!)"
+                    placeholder={import.meta.env.VITE_DEMO_MODE === 'true' ? `Enter current password (demo: ${import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!'})` : "Enter current password"}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E2D8] bg-[#FAF8F5] text-xs text-[#0F172A] focus:outline-none focus:border-[#C59B4B]"
                   />
                 </div>
@@ -1712,9 +1712,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
 
                 <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8]">
-                  <span className="text-xs text-[#78716C]">Default Fallback Password</span>
-                  <div className="font-mono font-bold text-[#A87F32] mt-1">SanctuaryAdmin2026!</div>
-                  <span className="text-[10px] text-[#78716C]">For initial prototype access</span>
+                  <span className="text-xs text-[#78716C]">Password Policy Status</span>
+                  <div className="font-mono font-bold text-[#A87F32] mt-1">
+                    {admin.passwordHash ? 'Custom Hash Saved' : import.meta.env.VITE_DEMO_MODE === 'true' ? 'Demo Seed Active' : 'Protected'}
+                  </div>
+                  <span className="text-[10px] text-[#78716C]">
+                    {admin.passwordLastChanged ? `Changed: ${new Date(admin.passwordLastChanged).toLocaleDateString()}` : 'Initial state'}
+                  </span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8]">
