@@ -38,7 +38,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
         {/* Philosophy Prose */}
         <p className="mt-6 text-base sm:text-lg text-[#526071] max-w-2xl mx-auto font-sans leading-relaxed">
-          PurvaPhalungi is a modern celestial sanctuary and Vedic astrology workspace. We distill ancient sidereal mechanics into luminous clarity—free from superstition, fatalism, or outdated melodrama.
+          Purva Phalguni is a modern celestial sanctuary and Vedic astrology workspace. We distill ancient sidereal mechanics into luminous clarity—free from superstition, fatalism, or outdated melodrama.
         </p>
 
         {/* Magnetic CTAs */}

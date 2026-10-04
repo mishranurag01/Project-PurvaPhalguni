@@ -246,10 +246,10 @@ END:VCALENDAR`;
                 <div
                   key={s.id}
                   onClick={() => setSelectedService(s)}
-                  className={`p-5 rounded-2xl border cursor-pointer transition-all ${
+                  className={`p-5 rounded-2xl border cursor-pointer transition-all duration-300 transform active:scale-95 ${
                     selectedService.id === s.id
-                      ? 'bg-[#FAF3E3] border-[#C59B4B] ring-1 ring-[#C59B4B]'
-                      : 'bg-[#FCFBF9] border-[#E8E2D8] hover:border-[#C59B4B]/50'
+                      ? 'bg-[#FAF3E3] border-[#C59B4B] ring-2 ring-[#C59B4B]/80 scale-[1.03] shadow-md -translate-y-1'
+                      : 'bg-[#FCFBF9] border-[#E8E2D8] hover:border-[#C59B4B]/50 hover:scale-[1.015] hover:shadow-xs'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -292,10 +292,10 @@ END:VCALENDAR`;
                 <div
                   key={practitioner.id}
                   onClick={() => setSelectedPractitioner(practitioner)}
-                  className={`p-6 rounded-2xl border cursor-pointer transition-all ${
+                  className={`p-6 rounded-2xl border cursor-pointer transition-all duration-300 transform active:scale-95 ${
                     selectedPractitioner?.id === practitioner.id
-                      ? 'bg-[#FAF3E3] border-[#C59B4B] ring-1 ring-[#C59B4B]'
-                      : 'bg-[#FCFBF9] border-[#E8E2D8] hover:border-[#C59B4B]/50'
+                      ? 'bg-[#FAF3E3] border-[#C59B4B] ring-2 ring-[#C59B4B]/80 scale-[1.03] shadow-md -translate-y-1'
+                      : 'bg-[#FCFBF9] border-[#E8E2D8] hover:border-[#C59B4B]/50 hover:scale-[1.015] hover:shadow-xs'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -360,10 +360,10 @@ END:VCALENDAR`;
                       key={slot}
                       type="button"
                       onClick={() => setBookingTime(slot)}
-                      className={`w-full text-left p-2.5 rounded-lg border text-xs transition-colors flex items-center justify-between ${
+                      className={`w-full text-left p-3 rounded-xl border text-xs transition-all duration-200 transform cursor-pointer active:scale-95 flex items-center justify-between ${
                         bookingTime === slot
-                          ? 'bg-[#FAF3E3] border-[#C59B4B] font-semibold text-[#0F172A]'
-                          : 'bg-[#FCFBF9] border-[#E8E2D8] hover:bg-white text-[#526071]'
+                          ? 'bg-[#FAF3E3] border-[#C59B4B] ring-1 ring-[#C59B4B] scale-[1.02] shadow-xs font-semibold text-[#0F172A]'
+                          : 'bg-[#FCFBF9] border-[#E8E2D8] hover:bg-white hover:scale-[1.01] text-[#526071]'
                       }`}
                     >
                       <span>{slot}</span>

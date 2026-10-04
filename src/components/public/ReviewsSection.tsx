@@ -30,7 +30,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews }) => {
         {approvedReviews.map((rev) => (
           <div
             key={rev.id}
-            className="group bg-white rounded-3xl border border-[#E8E2D8] hover:border-[#C59B4B]/60 p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-md relative"
+            className="group bg-white rounded-3xl border border-[#E8E2D8] hover:border-[#C59B4B] p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 transform hover:scale-[1.03] hover:-translate-y-2 hover:shadow-xl relative"
           >
             <div>
               {/* Star Rating & Date */}

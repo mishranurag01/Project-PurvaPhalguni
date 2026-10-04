@@ -433,11 +433,13 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
       {/* Main Grid: Sidebar + Tabs */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Navigation Sidebar */}
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-[#E8E2D8] p-3 shadow-xs space-y-1">
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-[#E8E2D8] p-3 shadow-xs space-y-1.5">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'dashboard' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'dashboard'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <TrendingUp className="w-4 h-4 text-[#C59B4B]" />
@@ -446,8 +448,10 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
 
           <button
             onClick={() => setActiveTab('clients')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'clients' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'clients'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Users className="w-4 h-4 text-[#C59B4B]" />
@@ -456,8 +460,10 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
 
           <button
             onClick={() => setActiveTab('astrology')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'astrology' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'astrology'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Sparkles className="w-4 h-4 text-[#C59B4B]" />
@@ -466,8 +472,10 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
 
           <button
             onClick={() => setActiveTab('calendar')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'calendar' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'calendar'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Calendar className="w-4 h-4 text-[#C59B4B]" />
@@ -476,8 +484,10 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
 
           <button
             onClick={() => setActiveTab('messages')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'messages' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'messages'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <MessageSquare className="w-4 h-4 text-[#C59B4B]" />
@@ -486,8 +496,10 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
 
           <button
             onClick={() => setActiveTab('referrals')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'referrals' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'referrals'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <DollarSign className="w-4 h-4 text-[#C59B4B]" />

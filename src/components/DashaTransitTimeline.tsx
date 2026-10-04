@@ -41,13 +41,13 @@ export const DashaTransitTimeline: React.FC<DashaTransitTimelineProps> = ({
           </h3>
         </div>
 
-        <div className="inline-flex p-1 bg-[#F5F2EB] rounded-lg text-xs font-medium">
+        <div className="inline-flex p-1 bg-[#F5F2EB] rounded-xl text-xs font-medium border border-[#E8E2D8]/60">
           <button
             onClick={() => setActiveTab('dasha')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all duration-200 transform active:scale-95 cursor-pointer ${
               activeTab === 'dasha'
-                ? 'bg-white text-[#0F172A] shadow-sm font-semibold'
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-white text-[#0F172A] shadow-md font-semibold scale-105 ring-1 ring-[#C59B4B]/40'
+                : 'text-[#64748B] hover:text-[#0F172A] hover:scale-105'
             }`}
           >
             <Clock className="w-3.5 h-3.5 text-[#C59B4B]" />
@@ -55,10 +55,10 @@ export const DashaTransitTimeline: React.FC<DashaTransitTimelineProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('transits')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all duration-200 transform active:scale-95 cursor-pointer ${
               activeTab === 'transits'
-                ? 'bg-white text-[#0F172A] shadow-sm font-semibold'
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-white text-[#0F172A] shadow-md font-semibold scale-105 ring-1 ring-[#8E7CC3]/40'
+                : 'text-[#64748B] hover:text-[#0F172A] hover:scale-105'
             }`}
           >
             <Orbit className="w-3.5 h-3.5 text-[#8E7CC3]" />

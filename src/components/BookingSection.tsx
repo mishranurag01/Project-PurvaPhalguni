@@ -87,7 +87,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({ reducedMotion = 
           Private Consultations in Quiet Light
         </h2>
         <p className="text-sm sm:text-base text-[#526071] mt-3 leading-relaxed">
-          PurvaPhalungi readings are calm, confidential, and intellectually rigorous. We dispense with ominous fortune-telling to focus on self-knowledge, dignity, and conscious timing.
+          Purva Phalguni readings are calm, confidential, and intellectually rigorous. We dispense with ominous fortune-telling to focus on self-knowledge, dignity, and conscious timing.
         </p>
       </div>
 

@@ -15,7 +15,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavClick }) => {
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-[#C59B4B]" />
               <span className="font-serif text-2xl font-bold tracking-tight text-white">
-                PurvaPhalungi
+                Purva Phalguni
               </span>
             </div>
             <p className="text-xs text-[#94A3B8] max-w-md leading-relaxed">
@@ -87,7 +87,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavClick }) => {
 
         {/* Quiet Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748B] gap-4">
-          <p>© {new Date().getFullYear()} PurvaPhalungi Celestial Sanctuary. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Purva Phalguni Celestial Sanctuary. All rights reserved.</p>
           <div className="flex items-center gap-4 text-[11px]">
             <span>Private Client Enclave (Demo)</span>
             <span>·</span>

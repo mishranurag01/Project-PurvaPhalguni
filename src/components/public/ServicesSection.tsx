@@ -32,8 +32,8 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
         {services.filter(s => s.isActive).map((service) => (
           <div
             key={service.id}
-            className={`group bg-white rounded-3xl border p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg relative overflow-hidden ${
-              service.isPopular ? 'border-[#C59B4B] ring-1 ring-[#C59B4B]' : 'border-[#E8E2D8] hover:border-[#C59B4B]/60'
+            className={`group bg-white rounded-3xl border p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 transform hover:scale-[1.025] hover:-translate-y-2 hover:shadow-xl relative overflow-hidden ${
+              service.isPopular ? 'border-[#C59B4B] ring-2 ring-[#C59B4B]/60 shadow-md' : 'border-[#E8E2D8] hover:border-[#C59B4B]'
             }`}
           >
             {service.isPopular && (

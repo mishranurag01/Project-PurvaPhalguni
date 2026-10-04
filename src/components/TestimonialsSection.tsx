@@ -9,7 +9,7 @@ export const TESTIMONIALS: Testimonial[] = [
     role: 'Principal Architect & Spatial Theorist',
     location: 'Zurich',
     service: 'The Natal Blueprint',
-    quote: 'PurvaPhalungi completely altered my perception of Jyotish. Instead of anxiety-inducing omens, I received an astonishingly precise architectural analysis of my creative rhythms. It felt like someone mapped my internal studio before I even built it.',
+    quote: 'Purva Phalguni completely altered my perception of Jyotish. Instead of anxiety-inducing omens, I received an astonishingly precise architectural analysis of my creative rhythms. It felt like someone mapped my internal studio before I even built it.',
     date: 'August 2026',
     rating: 5
   },
@@ -39,7 +39,7 @@ export const TESTIMONIALS: Testimonial[] = [
     role: 'Founder & Computational Biologist',
     location: 'Bangalore',
     service: 'Annual Solar Return & Muhurta',
-    quote: 'The mathematical fidelity of the sidereal calculations combined with Parashari principles is impeccable. PurvaPhalungi honors the classical shastras while delivering an interface that feels like high Scandinavian design.',
+    quote: 'The mathematical fidelity of the sidereal calculations combined with Parashari principles is impeccable. Purva Phalguni honors the classical shastras while delivering an interface that feels like high Scandinavian design.',
     date: 'June 2026',
     rating: 5
   }

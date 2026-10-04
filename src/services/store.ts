@@ -106,7 +106,11 @@ export class PracticeStore {
 
   // Getters & Setters
   static getSettings(): WebsiteSettings {
-    return this.load('settings', DEMO_SETTINGS);
+    const s = this.load('settings', DEMO_SETTINGS);
+    if (!s.brandName || s.brandName.includes('Business Name') || s.brandName === '[Business Name]' || s.brandName === 'PurvaPhalungi') {
+      s.brandName = 'Purva Phalguni';
+    }
+    return s;
   }
 
   static saveSettings(settings: WebsiteSettings): void {

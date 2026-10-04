@@ -17,17 +17,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   reducedMotion = false
 }) => {
   return (
-    <section className="relative pt-24 pb-20 md:pt-32 md:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+    <section className="relative pt-24 pb-20 md:pt-32 md:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden animate-fade-in-up">
       <div className="text-center max-w-3xl mx-auto relative z-10">
         {/* Subtle Pill Tag */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#E8E2D8] shadow-xs text-xs font-medium text-[#78716C] mb-6 backdrop-blur-xs">
-          <Sparkles className="w-3.5 h-3.5 text-[#C59B4B]" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#E8E2D8] shadow-xs text-xs font-medium text-[#78716C] mb-6 backdrop-blur-xs transition-transform duration-300 hover:scale-105">
+          <Sparkles className="w-3.5 h-3.5 text-[#C59B4B] animate-spin-slow" />
           <span>Iatromathematics · Sidereal Lahiri Ephemeris · Hermetic Cartomancy</span>
         </div>
 
         {/* Product Brand Name */}
         <h2 className="text-xl sm:text-2xl font-serif text-[#C59B4B] tracking-widest uppercase font-medium mb-3">
-          {settings.brandName}
+          {settings.brandName || 'Purva Phalguni'}
         </h2>
 
         {/* Editorial Headline */}

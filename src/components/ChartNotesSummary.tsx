@@ -45,7 +45,7 @@ export const ChartNotesSummary: React.FC<ChartNotesSummaryProps> = ({
       `Active Dasha: ${data.currentDasha.mahadasha} Mahadasha / ${data.currentDasha.antardasha} Antardasha\n\n` +
       `Creative & Soul Gift:\n"${data.creativeGift}"\n\n` +
       `Practitioner Notes:\n${notes}\n\n` +
-      `— Crafted at PurvaPhalungi Celestial Sanctuary`;
+      `— Crafted at Purva Phalguni Celestial Sanctuary`;
   };
 
   const handleCopySummary = async () => {
@@ -62,7 +62,7 @@ export const ChartNotesSummary: React.FC<ChartNotesSummaryProps> = ({
     const element = document.createElement('a');
     const file = new Blob([generateSummaryText()], { type: 'text/plain;charset=utf-8' });
     element.href = URL.createObjectURL(file);
-    element.download = `PurvaPhalungi_${data.profile.name.replace(/\s+/g, '_')}_Summary.txt`;
+    element.download = `Purva_Phalguni_${data.profile.name.replace(/\s+/g, '_')}_Summary.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);

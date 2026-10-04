@@ -17,6 +17,11 @@
     --border-gold: rgba(197, 155, 75, 0.25);
   }
 
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 90px;
+  }
+
   body {
     background-color: var(--bg-main);
     color: var(--text-primary);
@@ -29,7 +34,7 @@
   }
 }
 
-/* Subtle glow animations */
+/* Elegant keyframe animations */
 @keyframes subtlePulse {
   0%, 100% { opacity: 0.35; transform: scale(1); }
   50% { opacity: 0.65; transform: scale(1.03); }
@@ -46,6 +51,47 @@
   }
 }
 
+@keyframes fadeInSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tabSpringZoom {
+  0% {
+    transform: scale(0.96);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes goldSheen {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
 .animate-subtle-pulse {
   animation: subtlePulse 8s ease-in-out infinite;
 }
@@ -58,8 +104,39 @@
   animation: celestialRotate 160s linear reverse infinite;
 }
 
+.animate-fade-in-up {
+  animation: fadeInSlideUp 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-tab-zoom {
+  animation: tabSpringZoom 320ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-float-gentle {
+  animation: gentleFloat 5s ease-in-out infinite;
+}
+
+/* Interactive Square Tab Zoom and Tactile Elevation */
+.tab-interactive {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1), background-color 200ms ease, border-color 200ms ease;
+  will-change: transform;
+}
+.tab-interactive:hover {
+  transform: translateY(-2px) scale(1.025);
+}
+.tab-interactive:active {
+  transform: scale(0.97);
+}
+.tab-interactive-active {
+  transform: scale(1.03);
+  box-shadow: 0 4px 14px -2px rgba(197, 155, 75, 0.22);
+}
+
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

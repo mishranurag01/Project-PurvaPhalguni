@@ -33,11 +33,14 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand Name & Tagline */}
         <div
-          onClick={() => onNavigate('home')}
-          className="cursor-pointer select-none group flex items-center gap-3"
+          onClick={() => {
+            onNavigate('home');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="cursor-pointer select-none group flex items-center gap-3 transition-transform duration-300 active:scale-95"
         >
-          <div className="w-10 h-10 rounded-xl bg-white border border-[#E8E2D8] group-hover:border-[#C59B4B] flex items-center justify-center transition-all shadow-xs">
-            <svg className="w-5 h-5 text-[#C59B4B]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className="w-10 h-10 rounded-xl bg-white border border-[#E8E2D8] group-hover:border-[#C59B4B] group-hover:scale-110 flex items-center justify-center transition-all duration-300 shadow-xs">
+            <svg className="w-5 h-5 text-[#C59B4B] transition-transform duration-500 group-hover:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="12" cy="12" r="9" stroke="#E8E2D8" />
               <path d="M12 3a9 9 0 0 0 0 18 4.5 4.5 0 0 1 0-9 4.5 4.5 0 0 0 0-9z" fill="#C59B4B" fillOpacity="0.25" />
               <circle cx="12" cy="7.5" r="1.2" fill="#C59B4B" />
@@ -45,8 +48,8 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
             </svg>
           </div>
           <div>
-            <span className="font-serif text-2xl font-bold tracking-tight text-[#0F172A] block leading-none">
-              {settings.brandName}
+            <span className="font-serif text-2xl font-bold tracking-tight text-[#0F172A] block leading-none group-hover:text-[#A87F32] transition-colors duration-200">
+              {settings.brandName || 'Purva Phalguni'}
             </span>
             <span className="text-[10px] uppercase tracking-wider text-[#78716C] mt-1 block font-mono">
               Medical Astrology & Cartomancy
@@ -54,85 +57,97 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
           </div>
         </div>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-7 text-xs uppercase tracking-wider font-medium">
+        {/* Desktop Navigation Tabs with Zoom Animations */}
+        <nav className="hidden lg:flex items-center gap-2 text-xs uppercase tracking-wider font-medium">
           <button
-            onClick={() => onNavigate('home')}
-            className={`transition-colors py-1 relative ${
-              activeTab === 'home' ? 'text-[#0F172A] font-semibold' : 'text-[#64748B] hover:text-[#0F172A]'
+            onClick={() => {
+              onNavigate('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`px-3 py-1.5 rounded-xl transition-all duration-200 transform active:scale-95 ${
+              activeTab === 'home'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold scale-105 shadow-xs border border-[#C59B4B]/30'
+                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white hover:scale-105 border border-transparent'
             }`}
           >
             Home
-            {activeTab === 'home' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C59B4B]" />}
           </button>
 
           <button
-            onClick={() => onNavigate('services')}
-            className={`transition-colors py-1 relative ${
-              activeTab === 'services' ? 'text-[#0F172A] font-semibold' : 'text-[#64748B] hover:text-[#0F172A]'
+            onClick={() => {
+              onNavigate('services');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`px-3 py-1.5 rounded-xl transition-all duration-200 transform active:scale-95 ${
+              activeTab === 'services'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold scale-105 shadow-xs border border-[#C59B4B]/30'
+                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white hover:scale-105 border border-transparent'
             }`}
           >
             Services & Plans
-            {activeTab === 'services' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C59B4B]" />}
           </button>
 
           <button
-            onClick={() => onNavigate('about')}
-            className={`transition-colors py-1 relative ${
-              activeTab === 'about' ? 'text-[#0F172A] font-semibold' : 'text-[#64748B] hover:text-[#0F172A]'
+            onClick={() => {
+              onNavigate('about');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`px-3 py-1.5 rounded-xl transition-all duration-200 transform active:scale-95 ${
+              activeTab === 'about'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold scale-105 shadow-xs border border-[#C59B4B]/30'
+                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white hover:scale-105 border border-transparent'
             }`}
           >
             About & Ethics
-            {activeTab === 'about' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C59B4B]" />}
           </button>
 
-          <a
-            href="#how-it-works"
-            onClick={(e) => {
+          <button
+            onClick={() => {
               if (activeTab !== 'home') {
-                e.preventDefault();
                 onNavigate('home');
                 setTimeout(() => {
-                  document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                  document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
+              } else {
+                document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }
             }}
-            className="text-[#64748B] hover:text-[#0F172A] transition-colors py-1"
+            className="px-3 py-1.5 rounded-xl text-[#64748B] hover:text-[#0F172A] hover:bg-white hover:scale-105 transition-all duration-200 transform active:scale-95 border border-transparent"
           >
             How It Works
-          </a>
+          </button>
 
-          <a
-            href="#reviews"
-            onClick={(e) => {
+          <button
+            onClick={() => {
               if (activeTab !== 'home') {
-                e.preventDefault();
                 onNavigate('home');
                 setTimeout(() => {
-                  document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' });
+                  document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
+              } else {
+                document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }
             }}
-            className="text-[#64748B] hover:text-[#0F172A] transition-colors py-1"
+            className="px-3 py-1.5 rounded-xl text-[#64748B] hover:text-[#0F172A] hover:bg-white hover:scale-105 transition-all duration-200 transform active:scale-95 border border-transparent"
           >
             Client Reviews
-          </a>
+          </button>
 
-          <a
-            href="#faq"
-            onClick={(e) => {
+          <button
+            onClick={() => {
               if (activeTab !== 'home') {
-                e.preventDefault();
                 onNavigate('home');
                 setTimeout(() => {
-                  document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
+                  document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
+              } else {
+                document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }
             }}
-            className="text-[#64748B] hover:text-[#0F172A] transition-colors py-1"
+            className="px-3 py-1.5 rounded-xl text-[#64748B] hover:text-[#0F172A] hover:bg-white hover:scale-105 transition-all duration-200 transform active:scale-95 border border-transparent"
           >
             FAQ
-          </a>
+          </button>
         </nav>
 
         {/* Right Action Buttons */}
@@ -140,7 +155,7 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
           {/* Sign In Action */}
           <button
             onClick={onOpenSignIn}
-            className="px-3.5 py-2 rounded-xl border border-[#E8E2D8] bg-white text-xs font-semibold text-[#0F172A] hover:border-[#C59B4B] hover:text-[#C59B4B] flex items-center gap-1.5 transition-colors shadow-2xs"
+            className="px-3.5 py-2 rounded-xl border border-[#E8E2D8] bg-white text-xs font-semibold text-[#0F172A] hover:border-[#C59B4B] hover:text-[#C59B4B] hover:scale-105 active:scale-95 flex items-center gap-1.5 transition-all duration-200 shadow-2xs cursor-pointer"
           >
             <Lock className="w-3.5 h-3.5 text-[#C59B4B]" />
             <span>Sign In</span>
@@ -149,9 +164,12 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
           {/* Book a Reading Magnetic CTA */}
           <MagneticButton
             variant="primary"
-            onClick={() => onNavigate('booking')}
+            onClick={() => {
+              onNavigate('booking');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             reducedMotion={reducedMotion}
-            className="text-xs py-2 px-4 shadow-xs"
+            className="text-xs py-2 px-4 shadow-xs hover:scale-105 active:scale-95 transition-transform"
           >
             <Calendar className="w-3.5 h-3.5 text-[#C59B4B]" />
             <span>Book a Reading</span>

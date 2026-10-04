@@ -53,15 +53,15 @@ export const FaqSection: React.FC = () => {
           return (
             <div
               key={idx}
-              className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+              className={`rounded-2xl border transition-all duration-300 transform overflow-hidden ${
                 isOpen
-                  ? 'bg-white border-[#C59B4B]/60 shadow-xs'
-                  : 'bg-[#FCFBF9] border-[#E8E2D8] hover:border-[#C59B4B]/40 hover:bg-white'
+                  ? 'bg-white border-[#C59B4B] shadow-md scale-[1.01]'
+                  : 'bg-[#FCFBF9] border-[#E8E2D8] hover:border-[#C59B4B]/60 hover:bg-white hover:scale-[1.01]'
               }`}
             >
               <button
                 onClick={() => setOpenIdx(isOpen ? null : idx)}
-                className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer"
+                className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer active:scale-[0.99] transition-transform"
               >
                 <div className="flex items-center gap-3">
                   {isMedicalFaq ? (

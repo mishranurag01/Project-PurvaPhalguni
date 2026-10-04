@@ -45,22 +45,30 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleNavClick = (id: string) => {
     setActiveSection(id);
     setMobileMenuOpen(false);
+    soundSynth.playSoftTap();
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+      const headerOffset = 84;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: reducedMotion ? 'auto' : 'smooth'
+      });
     }
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#E8E2D8]">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#E8E2D8] transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand Logo with celestial glyph */}
         <div 
           onClick={() => handleNavClick('sanctuary')} 
           className="flex items-center gap-3 cursor-pointer select-none group"
         >
-          <div className="w-9 h-9 rounded-xl bg-white border border-[#E8E2D8] group-hover:border-[#C59B4B] flex items-center justify-center transition-all shadow-xs">
-            <svg className="w-5 h-5 text-[#C59B4B]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className="w-10 h-10 rounded-xl bg-white border border-[#E8E2D8] group-hover:border-[#C59B4B] group-hover:scale-105 group-hover:shadow-md flex items-center justify-center transition-all duration-300 shadow-xs">
+            <svg className="w-5 h-5 text-[#C59B4B] group-hover:rotate-45 transition-transform duration-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="12" cy="12" r="9" stroke="#E8E2D8" />
               <path d="M12 3a9 9 0 0 0 0 18 4.5 4.5 0 0 1 0-9 4.5 4.5 0 0 0 0-9z" fill="#C59B4B" fillOpacity="0.25" />
               <circle cx="12" cy="7.5" r="1" fill="#C59B4B" />
@@ -68,8 +76,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </svg>
           </div>
           <div>
-            <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#0F172A]">
-              PurvaPhalungi
+            <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#0F172A] group-hover:text-[#A87F32] transition-colors">
+              Purva Phalguni
             </span>
             <span className="block text-[9px] uppercase tracking-widest text-[#78716C] -mt-1 font-mono">
               Vedic Celestial Sanctuary

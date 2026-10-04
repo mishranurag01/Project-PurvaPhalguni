@@ -24,7 +24,7 @@ export const PublicFooter: React.FC<PublicFooterProps> = ({
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-[#C59B4B]" />
               <span className="font-serif text-2xl font-bold tracking-tight text-white">
-                {settings.brandName}
+                {settings.brandName || 'Purva Phalguni'}
               </span>
             </div>
 
@@ -50,22 +50,46 @@ export const PublicFooter: React.FC<PublicFooterProps> = ({
             </h5>
             <ul className="space-y-2 text-xs text-[#94A3B8]">
               <li>
-                <button onClick={() => onNavigate('home')} className="hover:text-white transition-colors">
+                <button
+                  onClick={() => {
+                    onNavigate('home');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-white hover:translate-x-1 transition-all duration-200"
+                >
                   Home Sanctuary
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('services')} className="hover:text-white transition-colors">
+                <button
+                  onClick={() => {
+                    onNavigate('services');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-white hover:translate-x-1 transition-all duration-200"
+                >
                   Services & Plans (M+A, M+C, M+A+C)
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('about')} className="hover:text-white transition-colors">
+                <button
+                  onClick={() => {
+                    onNavigate('about');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-white hover:translate-x-1 transition-all duration-200"
+                >
                   About & Ethical Code
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('booking')} className="hover:text-white transition-colors">
+                <button
+                  onClick={() => {
+                    onNavigate('booking');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-white hover:translate-x-1 transition-all duration-200"
+                >
                   Book a Consultation
                 </button>
               </li>

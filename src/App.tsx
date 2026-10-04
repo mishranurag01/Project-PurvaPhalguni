@@ -89,7 +89,7 @@ export default function App() {
             reducedMotion={reducedMotion}
           />
 
-          <main className="flex-1">
+          <main className="flex-1 animate-fade-in-up" key={publicTab}>
             {/* PUBLIC HOME PAGE SCROLL SEQUENCE */}
             {publicTab === 'home' && (
               <>

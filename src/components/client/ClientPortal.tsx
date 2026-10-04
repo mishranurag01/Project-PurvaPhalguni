@@ -215,7 +215,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
     const blob = new Blob([JSON.stringify(dataObj, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `PurvaPhalungi_ClientDossier_${client.id}.json`;
+    link.download = `Purva_Phalguni_ClientDossier_${client.id}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -254,11 +254,13 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
       {/* Main Layout: Sidebar Tabs + Content */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Navigation Tabs */}
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-[#E8E2D8] p-3 shadow-xs space-y-1">
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-[#E8E2D8] p-3 shadow-xs space-y-1.5">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'dashboard' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'dashboard'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Sparkles className="w-4 h-4 text-[#C59B4B]" />
@@ -267,8 +269,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('profile')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'profile' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'profile'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <User className="w-4 h-4 text-[#C59B4B]" />
@@ -277,8 +281,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('bookings')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'bookings' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'bookings'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Calendar className="w-4 h-4 text-[#C59B4B]" />
@@ -287,8 +293,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('messages')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'messages' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'messages'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <MessageSquare className="w-4 h-4 text-[#C59B4B]" />
@@ -297,8 +305,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('summaries')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'summaries' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'summaries'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <FileText className="w-4 h-4 text-[#C59B4B]" />
@@ -307,8 +317,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('consent')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'consent' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'consent'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Shield className="w-4 h-4 text-[#C59B4B]" />

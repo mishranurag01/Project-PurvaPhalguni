@@ -55,12 +55,12 @@ export const HowItWorksSection: React.FC = () => {
           return (
             <div
               key={st.num}
-              className="bg-white rounded-2xl border border-[#E8E2D8] hover:border-[#C59B4B]/60 p-6 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-xs relative"
+              className="bg-white rounded-2xl border border-[#E8E2D8] hover:border-[#C59B4B] p-6 flex flex-col justify-between transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 hover:shadow-lg relative group cursor-default"
             >
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-[#E8E2D8]/60">
-                  <span className="text-2xl font-serif font-bold text-[#C59B4B]">{st.num}</span>
-                  <div className="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#E8E2D8] flex items-center justify-center text-[#0F172A]">
+                  <span className="text-2xl font-serif font-bold text-[#C59B4B] group-hover:scale-110 transition-transform duration-300 inline-block">{st.num}</span>
+                  <div className="w-8 h-8 rounded-lg bg-[#FAF8F5] group-hover:bg-[#FAF3E3] group-hover:scale-110 border border-[#E8E2D8] group-hover:border-[#C59B4B] flex items-center justify-center text-[#0F172A] transition-all duration-300">
                     <Icon className="w-4 h-4 text-[#C59B4B]" />
                   </div>
                 </div>

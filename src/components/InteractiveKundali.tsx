@@ -57,23 +57,23 @@ export const InteractiveKundali: React.FC<InteractiveKundaliProps> = ({
         {/* Segmented Controls for Chart Style and Division */}
         <div className="flex items-center gap-2">
           {/* Division Selector */}
-          <div className="inline-flex p-1 bg-[#F5F2EB] rounded-lg text-xs font-medium">
+          <div className="inline-flex p-1 bg-[#F5F2EB] rounded-xl text-xs font-medium border border-[#E8E2D8]/60">
             <button
               onClick={() => setDivision('d1')}
-              className={`px-3 py-1.5 rounded-md transition-all ${
+              className={`px-3 py-1.5 rounded-lg transition-all duration-200 transform active:scale-95 cursor-pointer ${
                 division === 'd1'
-                  ? 'bg-white text-[#0F172A] shadow-sm font-semibold'
-                  : 'text-[#64748B] hover:text-[#0F172A]'
+                  ? 'bg-white text-[#0F172A] shadow-md font-semibold scale-105 ring-1 ring-[#C59B4B]/40'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:scale-105'
               }`}
             >
               D1 Rasi
             </button>
             <button
               onClick={() => setDivision('d9')}
-              className={`px-3 py-1.5 rounded-md transition-all ${
+              className={`px-3 py-1.5 rounded-lg transition-all duration-200 transform active:scale-95 cursor-pointer ${
                 division === 'd9'
-                  ? 'bg-white text-[#0F172A] shadow-sm font-semibold'
-                  : 'text-[#64748B] hover:text-[#0F172A]'
+                  ? 'bg-white text-[#0F172A] shadow-md font-semibold scale-105 ring-1 ring-[#C59B4B]/40'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:scale-105'
               }`}
             >
               D9 Navamsa
@@ -81,23 +81,23 @@ export const InteractiveKundali: React.FC<InteractiveKundaliProps> = ({
           </div>
 
           {/* Style Selector */}
-          <div className="inline-flex p-1 bg-[#F5F2EB] rounded-lg text-xs font-medium">
+          <div className="inline-flex p-1 bg-[#F5F2EB] rounded-xl text-xs font-medium border border-[#E8E2D8]/60">
             <button
               onClick={() => setChartType('north')}
-              className={`px-3 py-1.5 rounded-md transition-all ${
+              className={`px-3 py-1.5 rounded-lg transition-all duration-200 transform active:scale-95 cursor-pointer ${
                 chartType === 'north'
-                  ? 'bg-white text-[#0F172A] shadow-sm font-semibold'
-                  : 'text-[#64748B] hover:text-[#0F172A]'
+                  ? 'bg-white text-[#0F172A] shadow-md font-semibold scale-105 ring-1 ring-[#C59B4B]/40'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:scale-105'
               }`}
             >
               North Diamond
             </button>
             <button
               onClick={() => setChartType('south')}
-              className={`px-3 py-1.5 rounded-md transition-all ${
+              className={`px-3 py-1.5 rounded-lg transition-all duration-200 transform active:scale-95 cursor-pointer ${
                 chartType === 'south'
-                  ? 'bg-white text-[#0F172A] shadow-sm font-semibold'
-                  : 'text-[#64748B] hover:text-[#0F172A]'
+                  ? 'bg-white text-[#0F172A] shadow-md font-semibold scale-105 ring-1 ring-[#C59B4B]/40'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:scale-105'
               }`}
             >
               South Square
@@ -353,8 +353,10 @@ export const InteractiveKundali: React.FC<InteractiveKundaliProps> = ({
                       key={box.rasi}
                       onClick={() => setSelectedHouse(houseNum)}
                       style={{ gridRow: box.r + 1, gridColumn: box.c + 1 }}
-                      className={`border border-[#C59B4B]/35 p-1.5 flex flex-col justify-between cursor-pointer transition-colors ${
-                        isSelected ? 'bg-[#FAF3E3]' : 'hover:bg-[#FDFBF7]'
+                      className={`border p-1.5 flex flex-col justify-between cursor-pointer transition-all duration-300 transform relative ${
+                        isSelected
+                          ? 'bg-[#FAF3E3] border-[#C59B4B] scale-110 z-20 shadow-md ring-2 ring-[#C59B4B]/80 font-bold'
+                          : 'border-[#C59B4B]/35 hover:bg-[#FDFBF7] hover:scale-105 hover:z-10 hover:shadow-xs active:scale-95'
                       }`}
                     >
                       <div className="flex justify-between items-center text-[10px] text-[#A87F32]">
@@ -391,7 +393,7 @@ export const InteractiveKundali: React.FC<InteractiveKundaliProps> = ({
                   className="bg-white/80 border border-[#C59B4B]/20 flex flex-col items-center justify-center p-3 text-center"
                 >
                   <Sparkles className="w-5 h-5 text-[#C59B4B] mb-1" />
-                  <span className="font-serif text-sm font-medium text-[#0F172A]">PurvaPhalungi</span>
+                  <span className="font-serif text-sm font-medium text-[#0F172A]">Purva Phalguni</span>
                   <span className="text-[10px] text-[#64748B]">South Indian Format</span>
                 </div>
               </div>

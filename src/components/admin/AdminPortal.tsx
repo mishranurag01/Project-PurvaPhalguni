@@ -455,11 +455,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Main Grid: Navigation Tabs + Workspace Area */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Navigation Sidebar */}
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-[#E8E2D8] p-3 shadow-xs space-y-1">
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-[#E8E2D8] p-3 shadow-xs space-y-1.5">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'dashboard' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'dashboard'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <TrendingUp className="w-4 h-4 text-[#C59B4B]" />
@@ -468,8 +470,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('content')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'content' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'content'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Edit3 className="w-4 h-4 text-[#C59B4B]" />
@@ -478,8 +482,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('reviews')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'reviews' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'reviews'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Star className="w-4 h-4 text-[#C59B4B]" />
@@ -488,8 +494,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('services')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'services' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'services'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <FileText className="w-4 h-4 text-[#C59B4B]" />
@@ -498,8 +506,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('bookings')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'bookings' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'bookings'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Calendar className="w-4 h-4 text-[#C59B4B]" />
@@ -508,8 +518,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('clients')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'clients' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'clients'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Users className="w-4 h-4 text-[#C59B4B]" />
@@ -518,8 +530,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('affiliates')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors ${
-              activeTab === 'affiliates' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'affiliates'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <div className="flex items-center gap-2.5">
@@ -539,8 +553,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('payments')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'payments' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'payments'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <DollarSign className="w-4 h-4 text-[#C59B4B]" />
@@ -549,8 +565,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('astrology')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'astrology' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'astrology'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Sparkles className="w-4 h-4 text-[#C59B4B]" />
@@ -559,8 +577,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('knowledge')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'knowledge' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'knowledge'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <BookOpen className="w-4 h-4 text-[#C59B4B]" />
@@ -569,8 +589,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('research')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'research' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'research'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Activity className="w-4 h-4 text-[#8E7CC3]" />
@@ -579,8 +601,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('audit')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'audit' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'audit'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Lock className="w-4 h-4 text-[#C59B4B]" />
@@ -589,8 +613,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('settings')}
-            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-colors ${
-              activeTab === 'settings' ? 'bg-[#FAF3E3] text-[#0F172A] font-semibold' : 'text-[#64748B] hover:bg-[#FAF8F5]'
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
+              activeTab === 'settings'
+                ? 'bg-[#FAF3E3] text-[#0F172A] font-bold scale-[1.03] shadow-xs ring-1 ring-[#C59B4B]/40 translate-x-1'
+                : 'text-[#64748B] hover:bg-[#FAF8F5] hover:text-[#0F172A] hover:scale-[1.015]'
             }`}
           >
             <Key className="w-4 h-4 text-[#C59B4B]" />
@@ -700,11 +726,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-semibold uppercase tracking-wider text-[#0F172A] mb-1 text-[10px]">
-                      Brand Name (Temporary / Editable)
+                      Brand Name
                     </label>
                     <input
                       type="text"
-                      value={settings.brandName}
+                      placeholder="Purva Phalguni"
+                      value={settings.brandName || 'Purva Phalguni'}
                       onChange={(e) => setSettings({ ...settings, brandName: e.target.value })}
                       className="w-full p-2.5 rounded-xl border border-[#E8E2D8] bg-[#FCFBF9] font-serif text-sm font-bold focus:outline-none focus:border-[#C59B4B]"
                     />
@@ -1600,7 +1627,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     Admin Security & Password Management
                   </h3>
                   <p className="text-xs text-[#64748B]">
-                    Manage the executive credentials used to access the PurvaPhalguni Director Suite.
+                    Manage the executive credentials used to access the Purva Phalguni Director Suite.
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-mono text-emerald-800 self-start sm:self-auto">
@@ -1616,7 +1643,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span>How Passwords Are Protected</span>
                 </div>
                 <p className="text-[#526071] leading-relaxed">
-                  Passwords in PurvaPhalguni are never stored in plain text. Whenever you set or change a password, a <strong>128-bit cryptographically secure random salt</strong> is generated via <code className="bg-[#FAF3E3] text-[#7A5B20] px-1.5 py-0.5 rounded font-mono text-[11px]">crypto.getRandomValues</code>, combined with your password, and digested through <strong>SHA-256</strong>. Credential verifications utilize constant-time string comparisons to prevent timing attacks.
+                  Passwords in Purva Phalguni are never stored in plain text. Whenever you set or change a password, a <strong>128-bit cryptographically secure random salt</strong> is generated via <code className="bg-[#FAF3E3] text-[#7A5B20] px-1.5 py-0.5 rounded font-mono text-[11px]">crypto.getRandomValues</code>, combined with your password, and digested through <strong>SHA-256</strong>. Credential verifications utilize constant-time string comparisons to prevent timing attacks.
                 </p>
               </div>
 
