@@ -12,7 +12,7 @@ export const AffiliateDesk: React.FC<AffiliateDeskProps> = ({ reducedMotion = fa
   const [copiedLink, setCopiedLink] = useState(false);
   const [clientFilter, setClientFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
-  const referralUrl = `https://purvaphalungi.com/c/${affiliateHandle}`;
+  const referralUrl = `https://purvaphalguni.com/c/${affiliateHandle}`;
 
   const clientList = [
     { id: 'c-101', name: 'Dr. Vivienne St. Claire', date: '2026-10-02', service: 'The Natal Blueprint', status: 'Upcoming', fee: '$380', commission: '$76' },

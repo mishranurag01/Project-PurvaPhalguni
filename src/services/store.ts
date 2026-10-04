@@ -107,8 +107,11 @@ export class PracticeStore {
   // Getters & Setters
   static getSettings(): WebsiteSettings {
     const s = this.load('settings', DEMO_SETTINGS);
-    if (!s.brandName || s.brandName.includes('Business Name') || s.brandName === '[Business Name]' || s.brandName === 'PurvaPhalungi') {
-      s.brandName = 'Purva Phalguni';
+    if (!s.brandName || s.brandName !== 'PURVAPHALGUNI') {
+      s.brandName = 'PURVAPHALGUNI';
+    }
+    if (!s.tagline || s.tagline.includes('insight.')) {
+      s.tagline = 'Medical Astrology & Cartomancy';
     }
     return s;
   }

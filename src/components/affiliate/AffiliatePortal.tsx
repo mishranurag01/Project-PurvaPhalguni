@@ -507,8 +507,8 @@ export const AffiliatePortal: React.FC<AffiliatePortalProps> = ({
           </button>
         </div>
 
-        {/* Content Area */}
-        <div className="lg:col-span-9 space-y-6">
+        {/* Content Area with Smooth Entrance */}
+        <div key={activeTab} className="lg:col-span-9 space-y-6 animate-fade-in-up">
           {/* Live Real-time Service Rates Notice */}
           {serviceNotice && (
             <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-3 shadow-xs">

@@ -5,6 +5,7 @@ import { DevRolePreview } from './components/common/DevRolePreview';
 import { SignInModal } from './components/public/SignInModal';
 import { PublicHeader } from './components/public/PublicHeader';
 import { HeroSection } from './components/public/HeroSection';
+import { ObservatorySystemSection } from './components/public/ObservatorySystemSection';
 import { AboutSection } from './components/public/AboutSection';
 import { ServicesSection } from './components/public/ServicesSection';
 import { HowItWorksSection } from './components/public/HowItWorksSection';
@@ -19,8 +20,10 @@ import { AffiliatePortal } from './components/affiliate/AffiliatePortal';
 import { AdminPortal } from './components/admin/AdminPortal';
 import { CursorSpotlight } from './components/CursorSpotlight';
 import { CelestialBackdrop } from './components/CelestialOrb';
+import { IntroSequence } from './components/intro/IntroSequence';
 
 export default function App() {
+  const [showIntro, setShowIntro] = useState<boolean>(true);
   const [currentRole, setCurrentRole] = useState<UserRole>(() => PracticeStore.getActiveRole());
   const [publicTab, setPublicTab] = useState<'home' | 'services' | 'about' | 'booking'>('home');
   const [settings, setSettings] = useState<WebsiteSettings>(() => PracticeStore.getSettings());
@@ -86,6 +89,7 @@ export default function App() {
               setSignInRoleChoice('client');
               setIsSignInOpen(true);
             }}
+            onReplayIntro={() => setShowIntro(true)}
             reducedMotion={reducedMotion}
           />
 
@@ -101,22 +105,27 @@ export default function App() {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   onExploreServices={() => {
-                    setPublicTab('services');
+                    const el = document.getElementById('observatory');
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                      setPublicTab('services');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
+                  reducedMotion={reducedMotion}
+                />
+
+                {/* 2. Observatory Instruments & Systems (#observatory, #medical-astrology, #cartomancy, #insights, #about-section) */}
+                <ObservatorySystemSection
+                  onEnterObservatory={() => {
+                    setPublicTab('booking');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   reducedMotion={reducedMotion}
                 />
 
-                {/* 2. About the Practice */}
-                <AboutSection
-                  settings={settings}
-                  onReadMore={() => {
-                    setPublicTab('about');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                />
-
-                {/* 3. Services and Plans (M+A, M+C, M+A+C) */}
+                {/* 3. Curated Consultation Plans (M+A, M+C, M+A+C) */}
                 <ServicesSection
                   services={services}
                   onBookService={handleBookService}
@@ -232,6 +241,14 @@ export default function App() {
         currentRole={currentRole}
         onRoleChange={handleRoleChange}
       />
+
+      {/* Cinematic Celestial Ignition Opening Sequence */}
+      {showIntro && (
+        <IntroSequence
+          onComplete={() => setShowIntro(false)}
+          reducedMotion={reducedMotion}
+        />
+      )}
     </div>
   );
 }

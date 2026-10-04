@@ -393,7 +393,7 @@ export const InteractiveKundali: React.FC<InteractiveKundaliProps> = ({
                   className="bg-white/80 border border-[#C59B4B]/20 flex flex-col items-center justify-center p-3 text-center"
                 >
                   <Sparkles className="w-5 h-5 text-[#C59B4B] mb-1" />
-                  <span className="font-serif text-sm font-medium text-[#0F172A]">Purva Phalguni</span>
+                  <span className="font-serif text-sm font-medium text-[#0F172A] tracking-wider">PURVAPHALGUNI</span>
                   <span className="text-[10px] text-[#64748B]">South Indian Format</span>
                 </div>
               </div>

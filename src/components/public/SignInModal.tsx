@@ -168,13 +168,13 @@ export const SignInModal: React.FC<SignInModalProps> = ({
               setSelectedRole('client');
               soundSynth.playSoftTap();
             }}
-            className={`py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition-all ${
+            className={`py-3 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
               selectedRole === 'client'
-                ? 'bg-white text-[#0F172A] shadow-sm border border-[#E8E2D8]'
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-white text-[#0F172A] shadow-md border border-[#C59B4B]/50 scale-105 ring-1 ring-[#C59B4B]/30'
+                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60 hover:scale-102'
             }`}
           >
-            <User className="w-4 h-4 text-[#C59B4B]" />
+            <User className={`w-4 h-4 transition-transform duration-200 ${selectedRole === 'client' ? 'text-[#C59B4B] scale-110' : 'text-[#78716C]'}`} />
             <span>Client</span>
           </button>
 
@@ -184,13 +184,13 @@ export const SignInModal: React.FC<SignInModalProps> = ({
               setSelectedRole('affiliate');
               soundSynth.playSoftTap();
             }}
-            className={`py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition-all ${
+            className={`py-3 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
               selectedRole === 'affiliate'
-                ? 'bg-white text-[#0F172A] shadow-sm border border-[#E8E2D8]'
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-white text-[#0F172A] shadow-md border border-[#C59B4B]/50 scale-105 ring-1 ring-[#C59B4B]/30'
+                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60 hover:scale-102'
             }`}
           >
-            <Briefcase className="w-4 h-4 text-[#C59B4B]" />
+            <Briefcase className={`w-4 h-4 transition-transform duration-200 ${selectedRole === 'affiliate' ? 'text-[#C59B4B] scale-110' : 'text-[#78716C]'}`} />
             <span>Affiliate</span>
           </button>
 
@@ -200,13 +200,13 @@ export const SignInModal: React.FC<SignInModalProps> = ({
               setSelectedRole('admin');
               soundSynth.playSoftTap();
             }}
-            className={`py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition-all ${
+            className={`py-3 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1.5 transition-all duration-200 transform cursor-pointer active:scale-95 ${
               selectedRole === 'admin'
-                ? 'bg-white text-[#0F172A] shadow-sm border border-[#E8E2D8]'
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-white text-[#0F172A] shadow-md border border-[#C59B4B]/50 scale-105 ring-1 ring-[#C59B4B]/30'
+                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60 hover:scale-102'
             }`}
           >
-            <ShieldCheck className="w-4 h-4 text-[#C59B4B]" />
+            <ShieldCheck className={`w-4 h-4 transition-transform duration-200 ${selectedRole === 'admin' ? 'text-[#C59B4B] scale-110' : 'text-[#78716C]'}`} />
             <span>Admin</span>
           </button>
         </div>

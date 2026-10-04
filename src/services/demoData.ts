@@ -27,8 +27,8 @@ import {
 
 // Fictional Prototype Practice Settings
 export const DEMO_SETTINGS: WebsiteSettings = {
-  brandName: 'Purva Phalguni',
-  tagline: 'Medical Astrology and Cartomancy for reflective spiritual insight.',
+  brandName: 'PURVAPHALGUNI',
+  tagline: 'Medical Astrology & Cartomancy',
   requiredDisclaimer:
     'Services are offered for spiritual and educational purposes only. They are not medical advice, diagnosis, treatment, or a substitute for care from a qualified healthcare professional.',
   contactEmail: 'demo@example.com',

@@ -23,13 +23,17 @@ export const PublicFooter: React.FC<PublicFooterProps> = ({
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-[#C59B4B]" />
-              <span className="font-serif text-2xl font-bold tracking-tight text-white">
-                {settings.brandName || 'Purva Phalguni'}
+              <span className="font-serif text-2xl font-light tracking-[0.16em] text-white">
+                PURVAPHALGUNI
               </span>
             </div>
 
+            <p className="text-xs text-[#C59B4B] uppercase tracking-[0.2em] font-mono">
+              Medical Astrology & Cartomancy
+            </p>
+
             <p className="text-xs text-[#94A3B8] max-w-md leading-relaxed">
-              {settings.tagline}
+              Where celestial patterns meet the language of health and human experience. An intellectual observatory combining classical sidereal mechanics with hermetic symbolic cartomancy.
             </p>
 
             <div className="p-3.5 rounded-xl bg-[#1E293B]/70 border border-[#334155] text-xs text-[#CBD5E1] space-y-1.5 max-w-md">
@@ -135,7 +139,7 @@ export const PublicFooter: React.FC<PublicFooterProps> = ({
 
         {/* Bottom Legal Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748B] gap-4">
-          <p>© {new Date().getFullYear()} {settings.brandName}. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} PURVAPHALGUNI. All rights reserved.</p>
 
           <div className="flex flex-wrap items-center gap-4 text-[11px]">
             <button onClick={() => setActiveModal('privacy')} className="hover:text-[#CBD5E1] transition-colors">

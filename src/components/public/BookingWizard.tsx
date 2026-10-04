@@ -210,16 +210,53 @@ END:VCALENDAR`;
           </div>
         </div>
 
-        {/* 9 Step Progress Bar */}
-        <div className="mt-4 grid grid-cols-9 gap-1.5">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((step) => (
-            <div
-              key={step}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                currentStep >= step ? 'bg-[#C59B4B]' : 'bg-[#E8E2D8]'
-              }`}
-            />
-          ))}
+        {/* 9 Step Square Tabs Progress Navigation */}
+        <div className="mt-5 grid grid-cols-9 gap-1 sm:gap-2">
+          {[
+            { num: 1, label: 'Modality' },
+            { num: 2, label: 'Practitioner' },
+            { num: 3, label: 'Schedule' },
+            { num: 4, label: 'Profile' },
+            { num: 5, label: 'Birth Data' },
+            { num: 6, label: 'Consent' },
+            { num: 7, label: 'Payment' },
+            { num: 8, label: 'Review' },
+            { num: 9, label: 'Sanctuary' }
+          ].map((step) => {
+            const isCurrent = currentStep === step.num;
+            const isCompleted = currentStep > step.num;
+            const isAccessible = step.num <= currentStep;
+
+            return (
+              <button
+                key={step.num}
+                type="button"
+                disabled={!isAccessible}
+                onClick={() => {
+                  if (isAccessible) {
+                    soundSynth.playSoftTap();
+                    setCurrentStep(step.num);
+                    window.scrollTo({ top: 100, behavior: 'smooth' });
+                  }
+                }}
+                className={`py-2 px-1 rounded-xl text-center flex flex-col items-center justify-center transition-all duration-300 transform select-none ${
+                  isCurrent
+                    ? 'bg-[#FAF3E3] text-[#0F172A] font-bold border border-[#C59B4B] scale-110 shadow-md ring-2 ring-[#C59B4B]/30 z-10'
+                    : isCompleted
+                    ? 'bg-white text-[#C59B4B] border border-[#E8E2D8] hover:border-[#C59B4B] hover:scale-105 cursor-pointer shadow-2xs'
+                    : 'bg-[#F5F2EB]/50 text-[#A8A29E] border border-transparent cursor-not-allowed opacity-60'
+                }`}
+                title={`Step ${step.num}: ${step.label}`}
+              >
+                <span className={`text-xs font-mono font-bold leading-none ${isCurrent ? 'text-[#C59B4B]' : ''}`}>
+                  0{step.num}
+                </span>
+                <span className="hidden md:inline text-[9px] truncate max-w-full mt-0.5 tracking-tight">
+                  {step.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Prototype Warning Banner */}

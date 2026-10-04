@@ -624,8 +624,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </button>
         </div>
 
-        {/* Dynamic Admin Panes */}
-        <div className="lg:col-span-9 space-y-6">
+        {/* Dynamic Admin Panes with Smooth Entrance */}
+        <div key={activeTab} className="lg:col-span-9 space-y-6 animate-fade-in-up">
           {/* TAB 1: DASHBOARD */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">

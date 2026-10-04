@@ -328,8 +328,8 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
           </button>
         </div>
 
-        {/* Tab Content Panes */}
-        <div className="lg:col-span-9 space-y-6">
+        {/* Tab Content Panes with Smooth Entrance */}
+        <div key={activeTab} className="lg:col-span-9 space-y-6 animate-fade-in-up">
           {/* Real-time Rate / Duration Update Alert */}
           {rateUpdateBanner && (
             <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-3 shadow-xs">

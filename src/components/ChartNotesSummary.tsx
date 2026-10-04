@@ -36,7 +36,7 @@ export const ChartNotesSummary: React.FC<ChartNotesSummaryProps> = ({
 
   const generateSummaryText = () => {
     const moon = data.planets.find((p) => p.name === 'Moon');
-    return `✦ PURVAPHALUNGI VEDIC CONSULTATION SUMMARY ✦\n` +
+    return `✦ PURVA PHALGUNI VEDIC CONSULTATION SUMMARY ✦\n` +
       `Client: ${data.profile.name} (${data.profile.title})\n` +
       `Birth Coordinates: ${data.profile.birthDate} ${data.profile.birthTime} · ${data.profile.birthPlace}\n\n` +
       `Lagna (Ascendant): ${data.ascendant.sign} at ${data.ascendant.degreesInSign.toFixed(1)}° (${data.ascendant.nakshatra})\n` +
