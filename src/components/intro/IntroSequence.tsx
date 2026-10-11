@@ -7,8 +7,8 @@ interface IntroSequenceProps {
 }
 
 // Brand letters: "Purvaphalguni"
-const NAME_LETTERS = ['P', 'u', 'r', 'v', 'a', 'p', 'h', 'a', 'l', 'g', 'u', 'n', 'i'];
-const SUBTITLE_TEXT = 'medical astrology & cartomancy';
+const NAME_LETTERS = ['P', 'U', 'R', 'V', 'A', 'P', 'H', 'A', 'L', 'G', 'U', 'N', 'I'];
+const SUBTITLE_TEXT = 'Medical astrology & Cartomancy';
 
 export const IntroSequence: React.FC<IntroSequenceProps> = ({
   onComplete,
@@ -65,7 +65,7 @@ export const IntroSequence: React.FC<IntroSequenceProps> = ({
 
     // 1. Reveal letters one by one with subtle stagger
     const timeouts: NodeJS.Timeout[] = [];
-    const letterStaggerMs = 95;
+    const letterStaggerMs = 155;
     const initialDelay = 180;
 
     NAME_LETTERS.forEach((_, idx) => {
@@ -201,19 +201,6 @@ export const IntroSequence: React.FC<IntroSequenceProps> = ({
     >
       {/* Background Celestial Canvas */}
       <canvas ref={canvasRef} />
-
-      {/* Discreet Skip Button */}
-      <div className="absolute top-5 right-5 sm:top-7 sm:right-7 z-20">
-        <button
-          onClick={handleSkip}
-          className="text-xs uppercase tracking-[0.2em] text-[#aab2d6]/50 hover:text-[#e9d9b0] transition-colors duration-300 py-1.5 px-3 rounded-full border border-white/5 hover:border-[#e9d9b0]/30 bg-black/40 backdrop-blur-xs flex items-center gap-1.5 cursor-pointer font-sans"
-          title="Skip introductory animation (Press Esc)"
-          aria-label="Skip introductory animation"
-        >
-          <span>Skip</span>
-          <span className="text-[10px] opacity-60 font-mono">[Esc]</span>
-        </button>
-      </div>
 
       {/* Title Container matching exact user markup: .title, #name, #sub */}
       <div className="title">
