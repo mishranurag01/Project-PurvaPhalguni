@@ -1,7 +1,10 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { logError } from '../../errors/errorHandler';
 
 interface Props {
   children: ReactNode;
+  context?: string;
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -22,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error in Purva Phalguni application:', error, errorInfo);
+    logError(error, this.props.context || 'ErrorBoundary');
     this.setState({ errorInfo });
   }
 
@@ -42,6 +45,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
       return (
         <div className="min-h-screen bg-[#FAF8F5] text-[#0F172A] flex items-center justify-center p-6 font-sans">
           <div className="max-w-md w-full bg-white rounded-3xl border border-[#E8E2D8] p-8 shadow-sm text-center space-y-5">
@@ -53,6 +60,11 @@ export class ErrorBoundary extends Component<Props, State> {
               <h1 className="text-2xl font-serif font-bold text-[#0F172A]">
                 Sanctuary Pacing Re-centering
               </h1>
+              {this.props.context && (
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A87F32] block">
+                  Enclave: {this.props.context}
+                </span>
+              )}
               <p className="text-xs text-[#526071] leading-relaxed">
                 The celestial interface encountered an unexpected state. You can reload the sanctuary or reset session state.
               </p>
@@ -68,13 +80,13 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
               <button
                 onClick={this.handleReload}
-                className="flex-1 px-4 py-2.5 bg-[#0F172A] text-white rounded-xl text-xs font-semibold hover:bg-[#1E293B] transition-colors"
+                className="flex-1 px-4 py-2.5 bg-[#0F172A] text-white rounded-xl text-xs font-semibold hover:bg-[#1E293B] transition-colors cursor-pointer"
               >
                 Reload Sanctuary
               </button>
               <button
                 onClick={this.handleReset}
-                className="flex-1 px-4 py-2.5 bg-[#FAF3E3] text-[#7A5B20] border border-[#C59B4B]/30 rounded-xl text-xs font-semibold hover:bg-[#F3E7CA] transition-colors"
+                className="flex-1 px-4 py-2.5 bg-[#FAF3E3] text-[#7A5B20] border border-[#C59B4B]/30 rounded-xl text-xs font-semibold hover:bg-[#F3E7CA] transition-colors cursor-pointer"
               >
                 Reset Session
               </button>

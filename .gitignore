@@ -1,33 +1,176 @@
-# Dependencies
-node_modules/
+# ==============================================================================
+# PURVAPHALGUNI — Version Control Ignore Configuration
+# ==============================================================================
+# Comprehensive protection against accidental leakage of API keys, secrets,
+# crypto wallets, private keys, authentication tokens, and sensitive data.
+# ==============================================================================
 
-# Production build artifacts
-dist/
-build/
-coverage/
-
-# Sensitive environment configuration files
+# ------------------------------------------------------------------------------
+# 1. ENVIRONMENT CONFIGURATIONS & RUNTIME SECRETS
+# ------------------------------------------------------------------------------
+# All local, staging, and production environment definition files containing keys
 .env
 .env.*
 .env*.local
-.env.production
-.env.development
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.json
+*.local
+config.local.*
+local.settings.json
+
+# Whitelist safe public environment template
 !.env.example
 
-# Private keys, certificates & credentials
+# ------------------------------------------------------------------------------
+# 2. CRYPTO WALLETS, PRIVATE KEYS & WEB3 ASSETS (WALLET PROTECTION)
+# ------------------------------------------------------------------------------
+# Protect against wallet drainage and private key exposure
+wallets/
+wallet/
+*wallet*.json
+*wallets*.json
+wallet.dat
+*.seed
+*.mnemonic
+seed*.txt
+mnemonic*.txt
+secret_phrase*.txt
+recovery_phrase*.txt
+bip39*.txt
+deployer-key*
+private_key*
+privatekey*
+private-key*
+*.priv
+*.pubkey
+keystore/
+keystores/
+*.keystore
+*.jks
+hardhat.config.local.*
+foundry.toml.local
+.secret_words
+.secrets
+
+# ------------------------------------------------------------------------------
+# 3. API KEYS, CREDENTIALS & SERVICE ACCOUNTS
+# ------------------------------------------------------------------------------
+# Provider secrets and OAuth client files
+secrets/
+secret/
+*.secret
+*.secrets
+*api_key*
+*apikey*
+credentials.json
+*-credentials.json
+client_secret*.json
+oauth-creds*.json
+service-account*.json
+serviceAccountKey*.json
+gserviceaccount*.json
+firebase-adminsdk*.json
+google-credentials*.json
+.firebaserc
+.firebase/
+
+# ------------------------------------------------------------------------------
+# 4. PAYMENT & FINANCIAL INTEGRATION SECRETS
+# ------------------------------------------------------------------------------
+# Stripe, PayPal, Wise, and payment processor secrets
+stripe*.key
+stripe*.json
+paypal*.json
+wise*.json
+payment*.json
+payment*.key
+
+# ------------------------------------------------------------------------------
+# 5. CERTIFICATES, SSH KEYS & CRYPTOGRAPHIC ARTIFACTS
+# ------------------------------------------------------------------------------
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
 *.pem
 *.key
-*.cert
-*.crt
+*.pkcs12
 *.p12
 *.pfx
-secrets/
-credentials.json
+*.cert
+*.crt
+*.der
+*.ca-bundle
 
-# Operating System & Logs
+# ------------------------------------------------------------------------------
+# 6. AUTHENTICATION TOKENS & CLI CREDENTIALS
+# ------------------------------------------------------------------------------
+# Package manager auth tokens (prevents leaking access to npm/yarn registries)
+.npmrc
+.yarnrc
+.netrc
+*.token
+*.tokens
+*.jwt
+.auth/
+
+# Cloud provider CLI configs
+.aws/
+.azure/
+.gcloud/
+.kube/
+kubeconfig*
+
+# ------------------------------------------------------------------------------
+# 7. LOCAL DATABASES & BACKUPS
+# ------------------------------------------------------------------------------
+# Database dumps or SQLite stores containing sensitive records
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.backup
+*.bak
+
+# ------------------------------------------------------------------------------
+# 8. DEPENDENCIES & BUILD ARTIFACTS
+# ------------------------------------------------------------------------------
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.vite-temp/
+.cache/
+.turbo/
+.eslintcache
+
+# ------------------------------------------------------------------------------
+# 9. OPERATING SYSTEM & DIAGNOSTIC LOGS
+# ------------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
 *.log
+*.log.*
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------------------------------------------------
+# 10. EDITOR & IDE WORKSPACES
+# ------------------------------------------------------------------------------
+.idea/
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+

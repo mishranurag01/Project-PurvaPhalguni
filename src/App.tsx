@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { UserRole, WebsiteSettings, ServicePlan, UserProfile } from './types/practice';
-import { PracticeStore } from './services/store';
+import React, { useState } from 'react';
+import { PracticeProvider, usePractice } from './context/PracticeContext';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { DevRolePreview } from './components/common/DevRolePreview';
 import { SignInModal } from './components/public/SignInModal';
 import { PublicHeader } from './components/public/PublicHeader';
@@ -21,48 +21,34 @@ import { AdminPortal } from './components/admin/AdminPortal';
 import { CursorSpotlight } from './components/CursorSpotlight';
 import { CelestialBackdrop } from './components/CelestialOrb';
 import { IntroSequence } from './components/intro/IntroSequence';
+import { ServicePlan, UserRole } from './types/practice';
 
-export default function App() {
+function MainSanctuaryLayout() {
   const [showIntro, setShowIntro] = useState<boolean>(true);
-  const [currentRole, setCurrentRole] = useState<UserRole>(() => PracticeStore.getActiveRole());
-  const [publicTab, setPublicTab] = useState<'home' | 'services' | 'about' | 'booking'>('home');
-  const [settings, setSettings] = useState<WebsiteSettings>(() => PracticeStore.getSettings());
-  const [services, setServices] = useState<ServicePlan[]>(() => PracticeStore.getServices());
-  const [users, setUsers] = useState<UserProfile[]>(() => PracticeStore.getUsers());
-  const [reviews, setReviews] = useState(() => PracticeStore.getReviews());
-  const [preselectedService, setPreselectedService] = useState<ServicePlan | null>(null);
-  const [reducedMotion, setReducedMotion] = useState(false);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [signInRoleChoice, setSignInRoleChoice] = useState<'client' | 'affiliate' | 'admin'>('client');
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      if (mediaQuery.matches) {
-        setReducedMotion(true);
-      }
-    }
-
-    const unsubscribe = PracticeStore.subscribe(() => {
-      setUsers(PracticeStore.getUsers());
-      setSettings(PracticeStore.getSettings());
-      setServices(PracticeStore.getServices());
-      setReviews(PracticeStore.getReviews());
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleRoleChange = (role: UserRole) => {
-    setCurrentRole(role);
-  };
+  const {
+    currentRole,
+    currentUser,
+    publicTab,
+    settings,
+    services,
+    users,
+    reviews,
+    preselectedService,
+    reducedMotion,
+    setRole,
+    setPublicTab,
+    selectServiceForBooking,
+    updateSettings
+  } = usePractice();
 
   const handleBookService = (service: ServicePlan) => {
-    setPreselectedService(service);
-    setPublicTab('booking');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    selectServiceForBooking(service);
   };
 
-  // Find active users for portals
+  // Derive users for portals safely
   const currentClient = users.find((u) => u.id === 'user-client-1') || users[3];
   const currentAffiliate = users.find((u) => u.id === 'user-affiliate-1') || users[1];
   const currentAdmin = users.find((u) => u.id === 'user-admin-1') || users[0];
@@ -81,10 +67,7 @@ export default function App() {
           <PublicHeader
             settings={settings}
             activeTab={publicTab}
-            onNavigate={(tab) => {
-              setPublicTab(tab);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onNavigate={(tab) => setPublicTab(tab)}
             onOpenSignIn={() => {
               setSignInRoleChoice('client');
               setIsSignInOpen(true);
@@ -100,28 +83,22 @@ export default function App() {
                 {/* 1. Hero Section */}
                 <HeroSection
                   settings={settings}
-                  onBookClick={() => {
-                    setPublicTab('booking');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onBookClick={() => setPublicTab('booking')}
                   onExploreServices={() => {
                     const el = document.getElementById('observatory');
                     if (el) {
                       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     } else {
                       setPublicTab('services');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                   }}
+                  onReplayIntro={() => setShowIntro(true)}
                   reducedMotion={reducedMotion}
                 />
 
-                {/* 2. Observatory Instruments & Systems (#observatory, #medical-astrology, #cartomancy, #insights, #about-section) */}
+                {/* 2. Observatory Instruments & Systems */}
                 <ObservatorySystemSection
-                  onEnterObservatory={() => {
-                    setPublicTab('booking');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onEnterObservatory={() => setPublicTab('booking')}
                   reducedMotion={reducedMotion}
                 />
 
@@ -132,13 +109,13 @@ export default function App() {
                   reducedMotion={reducedMotion}
                 />
 
-                {/* 4. How It Works (5 Steps) */}
+                {/* 4. How It Works */}
                 <HowItWorksSection />
 
-                {/* 5. Client Reviews (Approved only, no medical claims) */}
+                {/* 5. Client Reviews */}
                 <ReviewsSection reviews={reviews} />
 
-                {/* 6. FAQ (5 Key Questions) */}
+                {/* 6. FAQ */}
                 <FaqSection />
               </>
             )}
@@ -166,7 +143,7 @@ export default function App() {
                 settings={settings}
                 preselectedService={preselectedService}
                 onBookingCompleted={() => {
-                  // After booking, refresh bookings
+                  // Handled via PracticeStore listener
                 }}
                 onCancel={() => setPublicTab('home')}
                 reducedMotion={reducedMotion}
@@ -181,10 +158,7 @@ export default function App() {
               setSignInRoleChoice('client');
               setIsSignInOpen(true);
             }}
-            onNavigate={(tab) => {
-              setPublicTab(tab);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onNavigate={(tab) => setPublicTab(tab)}
           />
         </div>
       )}
@@ -195,7 +169,7 @@ export default function App() {
           <ClientPortal
             client={currentClient}
             settings={settings}
-            onExitPortal={() => setCurrentRole('public')}
+            onExitPortal={() => setRole('public')}
             reducedMotion={reducedMotion}
           />
         </div>
@@ -207,7 +181,7 @@ export default function App() {
           <AffiliatePortal
             affiliate={currentAffiliate}
             settings={settings}
-            onExitPortal={() => setCurrentRole('public')}
+            onExitPortal={() => setRole('public')}
             reducedMotion={reducedMotion}
           />
         </div>
@@ -219,27 +193,27 @@ export default function App() {
           <AdminPortal
             admin={currentAdmin}
             settings={settings}
-            onUpdateSettings={(newSettings) => setSettings(newSettings)}
-            onExitPortal={() => setCurrentRole('public')}
+            onUpdateSettings={updateSettings}
+            onExitPortal={() => setRole('public')}
             reducedMotion={reducedMotion}
           />
         </div>
       )}
 
-      {/* Demonstration Authentication Screen (Modal with Client / Affiliate / Admin choices) */}
+      {/* Demonstration Authentication Screen */}
       <SignInModal
         isOpen={isSignInOpen}
         onClose={() => setIsSignInOpen(false)}
         initialRoleChoice={signInRoleChoice}
-        onSuccess={(role) => {
-          handleRoleChange(role);
+        onSuccess={(role: UserRole) => {
+          setRole(role);
         }}
       />
 
-      {/* Fixed bottom-corner development-only role preview switcher (active only when VITE_DEMO_MODE=true) */}
+      {/* Fixed bottom-corner development-only role preview switcher */}
       <DevRolePreview
         currentRole={currentRole}
-        onRoleChange={handleRoleChange}
+        onRoleChange={setRole}
       />
 
       {/* Cinematic Celestial Ignition Opening Sequence */}
@@ -250,5 +224,15 @@ export default function App() {
         />
       )}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary context="Purva Phalguni Application Root">
+      <PracticeProvider>
+        <MainSanctuaryLayout />
+      </PracticeProvider>
+    </ErrorBoundary>
   );
 }

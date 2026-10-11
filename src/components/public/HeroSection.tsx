@@ -7,6 +7,7 @@ interface HeroSectionProps {
   settings: WebsiteSettings;
   onBookClick: () => void;
   onExploreServices: () => void;
+  onReplayIntro?: () => void;
   reducedMotion?: boolean;
 }
 
@@ -14,6 +15,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   settings,
   onBookClick,
   onExploreServices,
+  onReplayIntro,
   reducedMotion = false
 }) => {
   return (
@@ -124,6 +126,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </p>
           </div>
         </div>
+
+        {/* Note & Replay Intro matching user sample */}
+        {onReplayIntro && (
+          <div className="mt-8 text-xs text-[#526071]/70 font-sans">
+            <span>Private sidereal observatory. </span>
+            <button
+              type="button"
+              onClick={onReplayIntro}
+              className="underline hover:text-[#C59B4B] transition-colors cursor-pointer bg-transparent border-0 font-inherit p-0 ml-1"
+            >
+              Replay introduction
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

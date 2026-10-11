@@ -2,6 +2,10 @@
 
 @layer base {
   :root {
+    --ink: #05060d;
+    --dusk: #14193a;
+    --gold: #e9d9b0;
+    --mist: #aab2d6;
     --bg-main: #FAF8F5;
     --bg-surface: #FFFFFF;
     --bg-ivory: #FDFBF7;
@@ -160,3 +164,114 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #C59B4B;
 }
+
+/* ==========================================================================
+   Purvaphalguni Celestial Intro Sequence & Landing Atmosphere
+   ========================================================================== */
+#intro {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 99999;
+  display: grid;
+  place-items: center;
+  transition: opacity 2s ease;
+}
+
+#intro.out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#intro canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#intro .title {
+  position: relative;
+  text-align: center;
+  padding: 0 1rem;
+}
+
+#name {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 300;
+  font-size: clamp(1.5rem, 6.2vw, 3.6rem);
+  letter-spacing: 0.42em;
+  margin-right: -0.42em;
+  color: var(--gold, #e9d9b0);
+  white-space: nowrap;
+}
+
+#name span {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(8px);
+  transition: opacity 1.2s ease, filter 1.2s ease, transform 1.2s ease;
+}
+
+#name span.on {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+#sub {
+  margin-top: 1.5rem;
+  font-family: Italiana, "Cormorant Garamond", serif;
+  font-size: clamp(0.85rem, 2.6vw, 1.2rem);
+  letter-spacing: 0.42em;
+  margin-right: -0.42em;
+  text-transform: lowercase;
+  opacity: 0;
+  transition: opacity 2s ease;
+  color: var(--mist, #aab2d6);
+}
+
+#sub.on {
+  opacity: 0.7;
+}
+
+/* Landing Page CTA & Atmosphere utilities matching sample */
+.landing-cosmic-bg {
+  background: radial-gradient(120% 80% at 50% 0, #222a5a 0, var(--dusk, #14193a) 38%, var(--ink, #05060d) 100%);
+}
+
+.intro-cta {
+  display: inline-block;
+  padding: 0.85rem 1.8rem;
+  border: 1px solid var(--gold, #e9d9b0);
+  color: var(--gold, #e9d9b0);
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin: 0.3rem;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.intro-cta:hover {
+  background: var(--gold, #e9d9b0);
+  color: var(--ink, #05060d);
+  transform: translateY(-1px);
+}
+
+.intro-cta.quiet {
+  border-color: #3a4272;
+  color: var(--mist, #aab2d6);
+}
+
+.intro-cta.quiet:hover {
+  background: rgba(170, 178, 214, 0.15);
+  color: #ffffff;
+  border-color: var(--mist, #aab2d6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #name span, #sub, #intro {
+    transition-duration: 0.01s !important;
+  }
+}
+
