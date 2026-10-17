@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserRole } from '../../types/practice';
 import { Sliders, X, ChevronUp, ChevronDown, ShieldAlert, Sparkles } from 'lucide-react';
+import { isDemoModeEnabled } from '../../utils/cryptoAuth';
 
 interface DevRolePreviewProps {
   currentRole: UserRole;
@@ -8,8 +9,7 @@ interface DevRolePreviewProps {
 }
 
 export const DevRolePreview: React.FC<DevRolePreviewProps> = ({ currentRole, onRoleChange }) => {
-  // Only render when VITE_DEMO_MODE is explicitly 'true'
-  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+  const isDemoMode = isDemoModeEnabled();
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!isDemoMode) {

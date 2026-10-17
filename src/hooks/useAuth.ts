@@ -7,12 +7,12 @@ import { logError } from '../errors/errorHandler';
 import { soundSynth } from '../utils/soundAmbience';
 
 export function useAuth() {
-  const { currentRole, currentUser, setRole, showToast } = usePractice();
+  const { currentRole, currentUser, setSession, signOut, showToast } = usePractice();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const login = useCallback(
-    async (email: string, password: string, role: UserRole): Promise<UserProfile> => {
+    async (email: string, password: string, role?: UserRole): Promise<UserProfile> => {
       setIsAuthenticating(true);
       setAuthError(null);
 
@@ -23,7 +23,7 @@ export function useAuth() {
         }
 
         soundSynth.playCelestialChime();
-        setRole(role);
+        setSession(result.user.id, result.user.role);
         showToast({
           type: 'success',
           title: 'Authentication Granted',
@@ -40,28 +40,28 @@ export function useAuth() {
         setIsAuthenticating(false);
       }
     },
-    [setRole, showToast]
+    [setSession, showToast]
   );
 
   const logout = useCallback(() => {
     soundSynth.playSoftTap();
-    setRole('public');
+    signOut();
     showToast({
       type: 'info',
       title: 'Session Concluded',
       message: 'Returned to public observatory view.'
     });
-  }, [setRole, showToast]);
+  }, [signOut, showToast]);
 
   return {
     currentRole,
     currentUser,
-    isAuthenticated: currentRole !== 'public',
+    isAuthenticated: Boolean(currentUser && currentRole !== 'public'),
     isAuthenticating,
     authError,
     setAuthError,
     login,
     logout,
-    switchRole: setRole
+    switchRole: setSession
   };
 }

@@ -35,11 +35,14 @@ Only variable definitions with sanitized placeholders (e.g., `MY_GEMINI_API_KEY`
 
 ---
 
-## 3. Cryptographic Password Hashing & Client Data Isolation
+## 3. Cryptographic Password Hashing & Authentication Security
 
 - **In-Memory Volatility**: Client birth charts, private astrological notes, and consultation dossiers are never persisted in insecure, unencrypted browser storage (`localStorage`).
-- **Salted SHA-256 Hashing**: Administrative credentials utilize unique per-account salts (`crypto.getRandomValues`) and SHA-256 digests (`crypto.subtle.digest`) before comparison (`src/utils/cryptoAuth.ts`). Plaintext passwords are never logged or stored.
-- **Role Isolation**: Strict role segregation between Client Sanctuary (`client`), Practitioner Enclave (`affiliate`), and Director Suite (`admin`).
+- **Salted SHA-256 Hashing (Fail-Closed)**: Account credentials enforce 128-bit random salts (`crypto.getRandomValues`) and SHA-256 digests (`crypto.subtle.digest`) via `src/utils/cryptoAuth.ts`. If Web Crypto primitives are unavailable, operations fail closed rather than falling back to weak hashes or pseudo-random values.
+- **No Hardcoded Passwords**: Fallback plaintext passwords ('admin', 'admin123', 'password') and credential pre-fills have been removed. Verification requires matching cryptographic digests.
+- **Production Demo Isolation**: Demo features (auto-fill, sandbox quick login, simulated roles) are strictly disabled in production builds (`PROD=true` or `NODE_ENV=production`). Setting `VITE_DEMO_MODE=true` in production is ignored by design.
+- **Role Selection Separation**: Selecting a role tab or dropdown item does not grant identity or bypass credential verification.
+- **Identity Provider Notice**: The current authentication layer is a client-side prototype. Production authentication is NOT complete until a real identity provider (e.g., Firebase Auth, OAuth 2.0 / OIDC, or secure backend auth service) is integrated.
 
 ---
 

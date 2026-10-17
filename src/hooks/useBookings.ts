@@ -6,14 +6,14 @@ export function useBookings() {
   const { bookings, currentRole, currentUser, addBooking } = usePractice();
 
   const userBookings = useMemo(() => {
-    if (currentRole === 'admin') return bookings;
+    if (currentRole === 'admin' && currentUser) return bookings;
     if (currentRole === 'affiliate' && currentUser) {
       return bookings.filter((b) => b.affiliateId === currentUser.id);
     }
     if (currentRole === 'client' && currentUser) {
       return bookings.filter((b) => b.clientId === currentUser.id);
     }
-    return bookings;
+    return [];
   }, [bookings, currentRole, currentUser]);
 
   const upcomingBookings = useMemo(() => {

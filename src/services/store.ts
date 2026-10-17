@@ -37,7 +37,14 @@ import {
   DEMO_BULLETINS,
   DEMO_PAYOUTS
 } from './demoData';
-import { hashPassword, verifyPassword, DEFAULT_CREDENTIALS } from '../utils/cryptoAuth';
+import {
+  hashPassword,
+  verifyPassword,
+  verifyAndMigratePassword,
+  DEFAULT_CREDENTIALS,
+  isDemoModeEnabled,
+  isProductionEnvironment
+} from '../utils/cryptoAuth';
 
 // Re-export aliases for backwards compatibility
 export const INITIAL_SETTINGS = DEMO_SETTINGS;
@@ -67,6 +74,7 @@ export type StoreEventType =
   | 'PAYOUTS_UPDATED'
   | 'AFFILIATE_STATUS_CHANGED'
   | 'AFFILIATE_PERMISSIONS_UPDATED'
+  | 'SESSION_UPDATED'
   | 'STORE_RESET'
   | '*';
 
@@ -91,6 +99,11 @@ export type StoreEventListener<T = any> = (event: StoreSyncEvent<T>) => void;
 export class PracticeStore {
   // Temporary in-memory dictionary
   private static memoryStore: Record<string, any> = {};
+
+  static resetStore(): void {
+    this.memoryStore = {};
+    this.notifySync('STORE_RESET', {});
+  }
 
   private static load<T>(key: string, defaultVal: T): T {
     if (this.memoryStore[key] === undefined) {
@@ -138,112 +151,111 @@ export class PracticeStore {
   }
 
   /**
-   * Cryptographic Authentication with Salted SHA-256 and resilient fallback
+   * Cryptographic Authentication with scrypt (RFC 7914) & Transparent Migration.
+   * Fails closed on missing/invalid credentials, suspended accounts, or cryptographic failure.
+   * In production builds, returns explicit error if backend IdP is not configured.
+   * Transparently migrates valid legacy prototype hashes to scrypt.
    */
   static async authenticateUser(
     email: string,
     passwordCandidate: string,
     expectedRole?: UserRole
   ): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
-    const users = this.getUsers();
     const cleanEmail = (email || '').toLowerCase().trim();
     const cleanPassword = (passwordCandidate || '').trim();
+
+    if (!cleanEmail || !cleanPassword) {
+      return { success: false, error: 'Email and password are required.' };
+    }
+
+    // Production fail-closed restriction:
+    // In production, do not simulate successful authentication or evaluate against client bundle.
+    if (isProductionEnvironment()) {
+      return {
+        success: false,
+        error:
+          'Production authentication service is not configured. Production deployment requires integration with a trusted identity provider (such as Firebase Authentication or OpenID Connect / OAuth) or a secure backend authentication endpoint. Simulating client-side authentication is prohibited.'
+      };
+    }
+
+    const users = this.getUsers();
 
     // 1. Find user by exact email
     let user = users.find((u) => u.email.toLowerCase().trim() === cleanEmail);
 
-    // 2. Flexible matching by username / alias / role
-    if (!user) {
-      if (cleanEmail === 'admin' || cleanEmail.includes('admin')) {
+    // 2. Demo shortcut matching: strictly restricted to demo/dev configuration
+    if (!user && isDemoModeEnabled()) {
+      if (cleanEmail === 'admin') {
         user = users.find((u) => u.role === 'admin');
-      } else if (cleanEmail === 'affiliate' || cleanEmail.includes('affiliate')) {
+      } else if (cleanEmail === 'affiliate') {
         user = users.find((u) => u.role === 'affiliate' && u.activeStatus !== 'deactivated');
-      } else if (cleanEmail === 'client' || cleanEmail.includes('client')) {
+      } else if (cleanEmail === 'client') {
         user = users.find((u) => u.role === 'client');
-      } else if (expectedRole) {
-        user = users.find((u) => u.role === expectedRole && u.activeStatus !== 'deactivated');
       }
     }
 
     if (!user) {
-      return { success: false, error: 'No account found matching this email or username.' };
+      return { success: false, error: 'Invalid credentials. Please verify your email and password.' };
     }
 
     if (expectedRole && user.role !== expectedRole) {
       return {
         success: false,
-        error: `This account is registered with role "${user.role}", not "${expectedRole}".`
+        error: 'Invalid credentials for the requested role.'
       };
     }
 
     if (user.activeStatus === 'deactivated' || user.activeStatus === 'suspended') {
       return {
         success: false,
-        error: `This practitioner account is currently ${user.activeStatus}. Please contact the practice director.`
+        error: `This account is currently ${user.activeStatus}. Please contact the practice director or administration.`
       };
     }
 
-    // 3. Custom password verification against salted SHA-256 hash (if user updated password via settings)
+    // 3. Cryptographic password verification with transparent scrypt migration
     if (user.passwordHash && user.passwordSalt) {
       try {
-        const isValid = await verifyPassword(
-          cleanPassword,
-          user.passwordHash,
-          user.passwordSalt
-        );
-        if (isValid) {
+        const migrationResult = await verifyAndMigratePassword(cleanPassword, user);
+        if (migrationResult.isValid) {
+          // If the account was verified with legacy hash, persist the upgraded scrypt credentials
+          if (migrationResult.requiresMigration && migrationResult.migratedHash && migrationResult.migratedSalt) {
+            const userIdx = users.findIndex((u) => u.id === user!.id);
+            if (userIdx !== -1) {
+              users[userIdx] = {
+                ...users[userIdx],
+                passwordHash: migrationResult.migratedHash,
+                passwordSalt: migrationResult.migratedSalt,
+                passwordAlgorithm: 'scrypt',
+                migratedAt: new Date().toISOString()
+              };
+              this.saveUsers(users);
+              user = users[userIdx];
+              this.logAction(
+                user.id,
+                user.name,
+                user.role,
+                'AUTH_MIGRATED',
+                'Account password hash transparently upgraded to secure memory-hard scrypt (RFC 7914).'
+              );
+            }
+          }
           return { success: true, user };
         }
       } catch {
-        // Fall through to initial credentials check
+        return { success: false, error: 'Cryptographic authentication error occurred.' };
       }
     }
 
-    // 4. Initial account credentials (always functional so accounts are never locked)
-    const validInitialPasswords: Record<UserRole, string[]> = {
-      admin: [
-        import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!',
-        'SanctuaryAdmin2026!',
-        'admin',
-        'admin123',
-        'sanctuaryadmin',
-        'password'
-      ],
-      affiliate: [
-        import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!',
-        'Practitioner2026!',
-        'affiliate',
-        'affiliate123',
-        'practitioner',
-        'password'
-      ],
-      client: [
-        import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!',
-        'ClientPass2026!',
-        'client',
-        'client123',
-        'password'
-      ],
-      public: []
-    };
-
-    const acceptedForRole = validInitialPasswords[user.role] || [];
-    const isInitialMatch = acceptedForRole.some(
-      (pwd) => pwd && pwd.toLowerCase() === cleanPassword.toLowerCase()
-    );
-
-    if (isInitialMatch) {
-      return { success: true, user };
-    }
-
+    // Fail closed: Accounts without valid password hash cannot authenticate.
+    // Insecure fallback passwords are never accepted.
     return {
       success: false,
-      error: `Incorrect password. Accepted passwords for ${user.role}: "${acceptedForRole[2] || 'admin'}" or "${acceptedForRole[0]}".`
+      error: 'Invalid credentials. Please verify your email and password.'
     };
   }
 
   /**
-   * Update User Password with fresh cryptographic salt and SHA-256 hash
+   * Update User Password with fresh cryptographic salt and scrypt hash
    */
   static async updateUserPassword(userId: string, newPasswordPlain: string): Promise<boolean> {
     const users = this.getUsers();
@@ -255,6 +267,7 @@ export class PracticeStore {
       ...users[idx],
       passwordHash: hash,
       passwordSalt: salt,
+      passwordAlgorithm: 'scrypt',
       passwordLastChanged: new Date().toISOString()
     };
 
@@ -264,39 +277,108 @@ export class PracticeStore {
       users[idx].name,
       users[idx].role,
       'PASSWORD_CHANGED',
-      `Password updated with salted SHA-256 cryptographic digest.`
+      `Password updated with scrypt (RFC 7914) memory-hard cryptographic digest.`
     );
     return true;
   }
 
   /**
-   * Verify an existing password before allowing password change
+   * Secure Client Self-Registration with scrypt (RFC 7914) Password Hashing.
+   * Validates email syntax, enforces minimum password strength, and persists credentials.
+   */
+  static async registerClient(data: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    birthDate?: string;
+    birthTime?: string;
+    birthCity?: string;
+    primaryIntention?: string;
+  }): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
+    const cleanName = (data.name || '').trim();
+    const cleanEmail = (data.email || '').toLowerCase().trim();
+    const cleanPassword = (data.password || '').trim();
+
+    if (!cleanName) {
+      return { success: false, error: 'Full name is required.' };
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid email address.' };
+    }
+    if (!cleanPassword || cleanPassword.length < 8) {
+      return { success: false, error: 'Password must be at least 8 characters long.' };
+    }
+
+    const users = this.getUsers();
+    const existing = users.find((u) => u.email.toLowerCase().trim() === cleanEmail);
+    if (existing) {
+      return { success: false, error: 'An account with this email address already exists. Please sign in.' };
+    }
+
+    try {
+      const { hash, salt } = await hashPassword(cleanPassword);
+      const newClient: UserProfile = {
+        id: `user-client-${Date.now()}`,
+        name: cleanName,
+        email: cleanEmail,
+        role: 'client',
+        phone: data.phone?.trim() || '+1 (555) 010-0099',
+        birthDate: data.birthDate || '2000-01-01',
+        birthTime: data.birthTime || '12:00',
+        birthCity: data.birthCity || 'Sanctuary City',
+        primaryIntention: data.primaryIntention?.trim() || 'Holistic astrological vitality consultation',
+        activeStatus: 'active',
+        consentGiven: true,
+        consentDate: new Date().toISOString().split('T')[0],
+        consentVersion: 'v2.4',
+        consentWithdrawn: false,
+        passwordHash: hash,
+        passwordSalt: salt,
+        passwordAlgorithm: 'scrypt',
+        passwordLastChanged: new Date().toISOString()
+      };
+
+      const updated = [...users, newClient];
+      this.saveUsers(updated);
+      this.logAction(
+        newClient.id,
+        newClient.name,
+        'client',
+        'REGISTER',
+        `New client self-registered: ${newClient.email}.`
+      );
+      this.notifySync('USERS_UPDATED', updated);
+      return { success: true, user: newClient };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Could not register client account.' };
+    }
+  }
+
+  /**
+   * Verify an existing password before allowing password change.
+   * Fails closed on any error or missing cryptographic hash.
    */
   static async verifyUserPassword(userId: string, candidatePassword: string): Promise<boolean> {
     const user = this.getUsers().find((u) => u.id === userId);
     if (!user) return false;
 
     const cleanCandidate = (candidatePassword || '').trim();
+    if (!cleanCandidate) return false;
 
-    // Check custom password hash first
+    // Check custom password hash with scrypt verification
     if (user.passwordHash && user.passwordSalt) {
       try {
-        return await verifyPassword(cleanCandidate, user.passwordHash, user.passwordSalt);
+        const res = await verifyAndMigratePassword(cleanCandidate, user);
+        return res.isValid;
       } catch {
         return false;
       }
     }
 
-    // Check initial fallback credentials
-    const validInitialPasswords: Record<UserRole, string[]> = {
-      admin: [import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || 'SanctuaryAdmin2026!', 'SanctuaryAdmin2026!', 'admin', 'admin123'],
-      affiliate: [import.meta.env.VITE_DEFAULT_AFFILIATE_PASSWORD || 'Practitioner2026!', 'Practitioner2026!', 'affiliate', 'affiliate123'],
-      client: [import.meta.env.VITE_DEFAULT_CLIENT_PASSWORD || 'ClientPass2026!', 'ClientPass2026!', 'client', 'client123'],
-      public: []
-    };
-
-    const accepted = validInitialPasswords[user.role] || [];
-    return accepted.some((p) => p.toLowerCase() === cleanCandidate.toLowerCase());
+    // Fail closed: Users without password hash cannot authenticate
+    return false;
   }
 
   static getServices(): ServicePlan[] {
@@ -962,20 +1044,146 @@ export class PracticeStore {
     return this.addEventListener<T>(eventType, listener);
   }
 
-  // Active Session Role Tracking (In-memory)
+  // ============================================================================
+  // Authenticated Session & Identity Resolution
+  // ============================================================================
+
+  /**
+   * Retrieves the current session role. Defaults to 'public'.
+   */
   static getActiveRole(): UserRole {
     return this.load('active_role', 'public');
   }
 
-  static setActiveRole(role: UserRole): void {
-    this.save('active_role', role);
+  /**
+   * Retrieves the current authenticated user's ID.
+   * Returns null if unauthenticated or session is cleared.
+   * Never infers or hardcodes a user ID based on role.
+   */
+  static getActiveUserId(): string | null {
+    return this.load<string | null>('active_user_id', null);
   }
 
-  static getActiveUserId(): string {
+  /**
+   * Sets the active role.
+   * CRITICAL SECURITY PRINCIPLE: Role changes must NOT establish authentication.
+   * If a user was previously authenticated, their actual profile role must match the requested role.
+   * If there is any mismatch or if no user was authenticated, active_user_id remains/becomes null.
+   */
+  static setActiveRole(role: UserRole): void {
+    this.save('active_role', role);
+
+    if (role === 'public') {
+      this.save('active_user_id', null);
+    } else {
+      const currentUserId = this.getActiveUserId();
+      if (currentUserId) {
+        const user = this.getUsers().find((u) => u.id === currentUserId);
+        if (!user || user.role !== role) {
+          // Inconsistent session: do NOT keep user ID when switching to a different role
+          this.save('active_user_id', null);
+        }
+      }
+    }
+
+    this.notifySync('SESSION_UPDATED', {
+      role,
+      userId: this.getActiveUserId(),
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Sets the authenticated user ID directly.
+   */
+  static setActiveUserId(userId: string | null): void {
+    this.save('active_user_id', userId);
+    this.notifySync('SESSION_UPDATED', {
+      role: this.getActiveRole(),
+      userId,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Establishes a verified authenticated session for a specific user ID and role.
+   * Validates:
+   * 1. User existence (missing user rejected).
+   * 2. Role consistency (user.role must match role argument).
+   * 3. Account status (suspended/deactivated accounts cannot establish active session).
+   */
+  static setSession(userId: string | null, role: UserRole): void {
+    if (userId) {
+      const user = this.getUsers().find((u) => u.id === userId);
+      if (!user) {
+        throw new Error(`Cannot establish session: User ID "${userId}" does not exist.`);
+      }
+      if (user.role !== role) {
+        throw new Error(
+          `Cannot establish session: User "${user.name}" has role "${user.role}", which does not match session role "${role}".`
+        );
+      }
+      if (user.activeStatus === 'deactivated' || user.activeStatus === 'suspended') {
+        throw new Error(
+          `Cannot establish session: User account is ${user.activeStatus}. Access denied.`
+        );
+      }
+    }
+
+    this.save('active_user_id', userId);
+    this.save('active_role', role);
+    this.notifySync('SESSION_UPDATED', {
+      role,
+      userId,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Clears the current authenticated session and returns to public role.
+   */
+  static clearSession(): void {
+    this.save('active_user_id', null);
+    this.save('active_role', 'public');
+    this.notifySync('SESSION_UPDATED', {
+      role: 'public',
+      userId: null,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Identity-based resolution of the authenticated user.
+   * Strict security checks:
+   * 1. Role must not be 'public'.
+   * 2. active_user_id must be present.
+   * 3. User with active_user_id must exist in users list (no fallback!).
+   * 4. User's role must match activeRole (no cross-role impersonation).
+   * 5. User's account must not be deactivated or suspended.
+   */
+  static getCurrentUser(): UserProfile | undefined {
     const role = this.getActiveRole();
-    if (role === 'admin') return 'user-admin-demo';
-    if (role === 'affiliate') return 'user-affiliate-1';
-    if (role === 'client') return 'user-client-1';
-    return '';
+    if (role === 'public') return undefined;
+
+    const userId = this.getActiveUserId();
+    if (!userId) return undefined;
+
+    const user = this.getUsers().find((u) => u.id === userId);
+    if (!user) {
+      // Missing user: fail closed, NEVER silently fallback to another user
+      return undefined;
+    }
+
+    // Inconsistent session: user's role does not match active role
+    if (user.role !== role) {
+      return undefined;
+    }
+
+    // Account status check: deactivated or suspended accounts cannot access protected functionality
+    if (user.activeStatus === 'deactivated' || user.activeStatus === 'suspended') {
+      return undefined;
+    }
+
+    return user;
   }
 }

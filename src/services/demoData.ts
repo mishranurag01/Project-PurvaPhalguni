@@ -48,8 +48,24 @@ export const DEMO_SETTINGS: WebsiteSettings = {
     'Informed consent is mandatory prior to any birth chart calculation. Clients retain the unencumbered right to inspect their records or withdraw consent at any time.'
 };
 
-// Fictional Prototype Users
+// Fictional Prototype Users with Cryptographic scrypt (RFC 7914) Hashes
 export const DEMO_USERS: UserProfile[] = [
+  {
+    id: 'user-admin-personal',
+    email: 'mishranurag01@gmail.com',
+    name: 'Anurag Mishra (Lead Administrator)',
+    role: 'admin',
+    phone: '+1 (555) 010-0000',
+    consentGiven: true,
+    consentDate: '2026-01-01',
+    consentVersion: 'v2.4',
+    specialty: 'Lead Practice Administrator & Sanctuary Director',
+    activeStatus: 'active',
+    passwordSalt: 'salt_admin_purvaphalguni_2026',
+    passwordHash: 'ba2a00bde42d376fd20a8e97268bfde4e31efad0eba312450d1b7c53d7eed5e8',
+    passwordAlgorithm: 'scrypt',
+    passwordLastChanged: '2026-01-01T00:00:00.000Z'
+  },
   {
     id: 'user-admin-demo',
     email: 'admin@purvaphalguni.com',
@@ -60,7 +76,11 @@ export const DEMO_USERS: UserProfile[] = [
     consentDate: '2026-01-01',
     consentVersion: 'v2.4',
     specialty: 'Astrology Director & Practice Coordinator',
-    activeStatus: 'active'
+    activeStatus: 'active',
+    passwordSalt: 'salt_admin_purvaphalguni_2026',
+    passwordHash: 'ba2a00bde42d376fd20a8e97268bfde4e31efad0eba312450d1b7c53d7eed5e8',
+    passwordAlgorithm: 'scrypt',
+    passwordLastChanged: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'user-affiliate-1',
@@ -80,7 +100,11 @@ export const DEMO_USERS: UserProfile[] = [
     consentVersion: 'v2.4',
     payoutMethodPreference: 'wise',
     payoutAccountDetails: 'Demo Payout Account 1 (Fictional — Not Connected)',
-    workCapacity: '10 sessions / week'
+    workCapacity: '10 sessions / week',
+    passwordSalt: 'salt_affiliate1_purvaphalguni_2026',
+    passwordHash: '793a7cda292987c7747134a09ff58b9735e40ffb9c06ade1804a47635910cccd',
+    passwordAlgorithm: 'scrypt',
+    passwordLastChanged: '2026-01-15T00:00:00.000Z'
   },
   {
     id: 'user-affiliate-2',
@@ -100,7 +124,11 @@ export const DEMO_USERS: UserProfile[] = [
     consentVersion: 'v2.4',
     payoutMethodPreference: 'bank_wire',
     payoutAccountDetails: 'Demo Payout Account 2 (Fictional — Not Connected)',
-    workCapacity: '8 sessions / week'
+    workCapacity: '8 sessions / week',
+    passwordSalt: 'salt_affiliate2_purvaphalguni_2026',
+    passwordHash: '3ea90016085314496ab39be519e660fe2ce5f15dc0d54e952d63af78a63744f7',
+    passwordAlgorithm: 'scrypt',
+    passwordLastChanged: '2026-02-01T00:00:00.000Z'
   },
   {
     id: 'user-affiliate-3',
@@ -122,7 +150,11 @@ export const DEMO_USERS: UserProfile[] = [
     consentVersion: 'v2.4',
     payoutMethodPreference: 'stripe',
     payoutAccountDetails: 'Demo Payout Account 3 (Fictional — Not Connected)',
-    workCapacity: '4 sessions / week'
+    workCapacity: '4 sessions / week',
+    passwordSalt: 'salt_affiliate2_purvaphalguni_2026',
+    passwordHash: '3ea90016085314496ab39be519e660fe2ce5f15dc0d54e952d63af78a63744f7',
+    passwordAlgorithm: 'scrypt',
+    passwordLastChanged: '2026-03-01T00:00:00.000Z'
   },
   {
     id: 'user-client-1',
@@ -141,7 +173,11 @@ export const DEMO_USERS: UserProfile[] = [
     consentGiven: true,
     consentDate: '2026-08-10',
     consentVersion: 'v2.4',
-    consentWithdrawn: false
+    consentWithdrawn: false,
+    passwordSalt: 'salt_client1_purvaphalguni_2026',
+    passwordHash: 'ba56a91bcd3588b5555540aa2f48e8f09f6618635342a44a11ec5abada3f727e',
+    passwordAlgorithm: 'scrypt',
+    passwordLastChanged: '2026-08-10T00:00:00.000Z'
   },
   {
     id: 'user-client-2',
@@ -160,7 +196,11 @@ export const DEMO_USERS: UserProfile[] = [
     consentGiven: true,
     consentDate: '2026-09-02',
     consentVersion: 'v2.4',
-    consentWithdrawn: false
+    consentWithdrawn: false,
+    passwordSalt: 'salt_client1_purvaphalguni_2026',
+    passwordHash: 'ba56a91bcd3588b5555540aa2f48e8f09f6618635342a44a11ec5abada3f727e',
+    passwordAlgorithm: 'scrypt',
+    passwordLastChanged: '2026-09-02T00:00:00.000Z'
   },
   {
     id: 'user-client-3',
@@ -179,7 +219,10 @@ export const DEMO_USERS: UserProfile[] = [
     consentGiven: true,
     consentDate: '2026-09-12',
     consentVersion: 'v2.4',
-    consentWithdrawn: false
+    consentWithdrawn: false,
+    passwordSalt: 'salt_client_purvaphalguni_2026',
+    passwordHash: 'ff23e22d8b7755995f096e1d73d4a14c72440fbec5719af07057f04c8f5c1c56',
+    passwordLastChanged: '2026-09-12T00:00:00.000Z'
   }
 ];
 

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PracticeProvider, usePractice } from './context/PracticeContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { DevRolePreview } from './components/common/DevRolePreview';
-import { SignInModal } from './components/public/SignInModal';
+import { UnifiedLoginPage } from './components/auth/UnifiedLoginPage';
 import { PublicHeader } from './components/public/PublicHeader';
 import { HeroSection } from './components/public/HeroSection';
 import { ObservatorySystemSection } from './components/public/ObservatorySystemSection';
@@ -18,19 +18,20 @@ import { BookingWizard } from './components/public/BookingWizard';
 import { ClientPortal } from './components/client/ClientPortal';
 import { AffiliatePortal } from './components/affiliate/AffiliatePortal';
 import { AdminPortal } from './components/admin/AdminPortal';
+import { NotAuthenticated } from './components/common/NotAuthenticated';
+import { PermissionDenied } from './components/common/PermissionDenied';
 import { CursorSpotlight } from './components/CursorSpotlight';
 import { CelestialBackdrop } from './components/CelestialOrb';
 import { IntroSequence } from './components/intro/IntroSequence';
-import { ServicePlan, UserRole } from './types/practice';
+import { ServicePlan } from './types/practice';
 
 function MainSanctuaryLayout() {
   const [showIntro, setShowIntro] = useState<boolean>(true);
-  const [isSignInOpen, setIsSignInOpen] = useState(false);
-  const [signInRoleChoice, setSignInRoleChoice] = useState<'client' | 'affiliate' | 'admin'>('client');
 
   const {
     currentRole,
     currentUser,
+    currentRoute,
     publicTab,
     settings,
     services,
@@ -38,20 +39,26 @@ function MainSanctuaryLayout() {
     reviews,
     preselectedService,
     reducedMotion,
+    navigateTo,
     setRole,
+    signOut,
     setPublicTab,
     selectServiceForBooking,
     updateSettings
   } = usePractice();
 
+  // If authenticated user visits /login, redirect automatically to their portal
+  useEffect(() => {
+    if (currentRoute === '/login' && currentUser && currentRole !== 'public') {
+      if (currentRole === 'client') navigateTo('/client');
+      else if (currentRole === 'affiliate') navigateTo('/affiliate');
+      else if (currentRole === 'admin') navigateTo('/admin');
+    }
+  }, [currentRoute, currentUser, currentRole, navigateTo]);
+
   const handleBookService = (service: ServicePlan) => {
     selectServiceForBooking(service);
   };
-
-  // Derive users for portals safely
-  const currentClient = users.find((u) => u.id === 'user-client-1') || users[3];
-  const currentAffiliate = users.find((u) => u.id === 'user-affiliate-1') || users[1];
-  const currentAdmin = users.find((u) => u.id === 'user-admin-1') || users[0];
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#0F172A] relative selection:bg-[#EBDAB5] selection:text-[#0F172A]">
@@ -61,17 +68,49 @@ function MainSanctuaryLayout() {
       {/* Subtle Celestial Geometry Backdrop */}
       <CelestialBackdrop reducedMotion={reducedMotion} />
 
-      {/* 1. PUBLIC WEBSITE EXPERIENCE */}
-      {currentRole === 'public' && (
+      {/* 1. UNIFIED LOGIN ROUTE (/login) */}
+      {currentRoute === '/login' && (
+        <div className="relative z-10 flex flex-col min-h-screen">
+          <PublicHeader
+            settings={settings}
+            activeTab={publicTab}
+            onNavigate={(tab) => {
+              navigateTo('/');
+              setPublicTab(tab);
+            }}
+            onOpenSignIn={() => navigateTo('/login')}
+            onReplayIntro={() => setShowIntro(true)}
+            reducedMotion={reducedMotion}
+          />
+          <main className="flex-1 flex items-center justify-center p-4">
+            <UnifiedLoginPage
+              onSuccessRedirect={(role) => {
+                if (role === 'admin') navigateTo('/admin');
+                else if (role === 'affiliate') navigateTo('/affiliate');
+                else navigateTo('/client');
+              }}
+              onCancel={() => navigateTo('/')}
+            />
+          </main>
+          <PublicFooter
+            settings={settings}
+            onOpenSignIn={() => navigateTo('/login')}
+            onNavigate={(tab) => {
+              navigateTo('/');
+              setPublicTab(tab);
+            }}
+          />
+        </div>
+      )}
+
+      {/* 2. PUBLIC WEBSITE EXPERIENCE (/) */}
+      {currentRoute === '/' && (
         <div className="relative z-10 flex flex-col min-h-screen">
           <PublicHeader
             settings={settings}
             activeTab={publicTab}
             onNavigate={(tab) => setPublicTab(tab)}
-            onOpenSignIn={() => {
-              setSignInRoleChoice('client');
-              setIsSignInOpen(true);
-            }}
+            onOpenSignIn={() => navigateTo('/login')}
             onReplayIntro={() => setShowIntro(true)}
             reducedMotion={reducedMotion}
           />
@@ -135,7 +174,7 @@ function MainSanctuaryLayout() {
               <AboutPage settings={settings} />
             )}
 
-            {/* BOOKING PAGE / WIZARD (9 Steps) */}
+            {/* BOOKING PAGE / WIZARD */}
             {publicTab === 'booking' && (
               <BookingWizard
                 services={services}
@@ -151,64 +190,114 @@ function MainSanctuaryLayout() {
             )}
           </main>
 
-          {/* 7. Footer */}
+          {/* Footer */}
           <PublicFooter
             settings={settings}
-            onOpenSignIn={() => {
-              setSignInRoleChoice('client');
-              setIsSignInOpen(true);
-            }}
+            onOpenSignIn={() => navigateTo('/login')}
             onNavigate={(tab) => setPublicTab(tab)}
           />
         </div>
       )}
 
-      {/* 2. CLIENT PORTAL */}
-      {currentRole === 'client' && (
+      {/* 3. CLIENT PORTAL DESTINATION ROUTE (/client) — Identity-based authorization */}
+      {currentRoute === '/client' && (
         <div className="relative z-10">
-          <ClientPortal
-            client={currentClient}
-            settings={settings}
-            onExitPortal={() => setRole('public')}
-            reducedMotion={reducedMotion}
-          />
+          {currentUser && currentUser.role === 'client' ? (
+            currentUser.activeStatus === 'deactivated' || currentUser.activeStatus === 'suspended' ? (
+              <PermissionDenied
+                requiredRoleName="Active Clients"
+                customMessage="Your client account is currently suspended or deactivated. Please contact the sanctuary administration."
+                onReturnHome={() => signOut()}
+                onSwitchAccount={() => navigateTo('/login')}
+              />
+            ) : (
+              <ClientPortal
+                client={currentUser}
+                settings={settings}
+                onExitPortal={() => signOut()}
+                reducedMotion={reducedMotion}
+              />
+            )
+          ) : currentUser && currentUser.role !== 'client' ? (
+            <PermissionDenied
+              requiredRoleName="Active Clients"
+              customMessage="This sanctuary section is reserved for clients. You are currently authenticated with a different role."
+              onReturnHome={() => navigateTo('/')}
+              onSwitchAccount={() => navigateTo('/login')}
+            />
+          ) : (
+            <NotAuthenticated
+              requiredPortalName="Client Health Portal"
+              onSignIn={() => navigateTo('/login')}
+              onReturnHome={() => navigateTo('/')}
+            />
+          )}
         </div>
       )}
 
-      {/* 3. AFFILIATE (PRACTITIONER) PORTAL */}
-      {currentRole === 'affiliate' && (
+      {/* 4. AFFILIATE PRACTITIONER PORTAL DESTINATION ROUTE (/affiliate) — Identity-based authorization */}
+      {currentRoute === '/affiliate' && (
         <div className="relative z-10">
-          <AffiliatePortal
-            affiliate={currentAffiliate}
-            settings={settings}
-            onExitPortal={() => setRole('public')}
-            reducedMotion={reducedMotion}
-          />
+          {currentUser && currentUser.role === 'affiliate' ? (
+            currentUser.activeStatus === 'deactivated' || currentUser.activeStatus === 'suspended' ? (
+              <PermissionDenied
+                requiredRoleName="Active Practitioners"
+                customMessage={`This affiliate practitioner account is currently ${currentUser.activeStatus}. Protected clinical folio and client chart tools are restricted.`}
+                onReturnHome={() => signOut()}
+                onSwitchAccount={() => navigateTo('/login')}
+              />
+            ) : (
+              <AffiliatePortal
+                affiliate={currentUser}
+                settings={settings}
+                onExitPortal={() => signOut()}
+                reducedMotion={reducedMotion}
+              />
+            )
+          ) : currentUser && currentUser.role !== 'affiliate' ? (
+            <PermissionDenied
+              requiredRoleName="Active Practitioners"
+              customMessage="This clinical desk is reserved for affiliated practitioner partners. You do not have practitioner privileges."
+              onReturnHome={() => navigateTo('/')}
+              onSwitchAccount={() => navigateTo('/login')}
+            />
+          ) : (
+            <NotAuthenticated
+              requiredPortalName="Affiliate Practitioner Desk"
+              onSignIn={() => navigateTo('/login')}
+              onReturnHome={() => navigateTo('/')}
+            />
+          )}
         </div>
       )}
 
-      {/* 4. ADMIN PORTAL */}
-      {currentRole === 'admin' && (
+      {/* 5. ADMIN PORTAL DESTINATION ROUTE (/admin) — Identity-based authorization */}
+      {currentRoute === '/admin' && (
         <div className="relative z-10">
-          <AdminPortal
-            admin={currentAdmin}
-            settings={settings}
-            onUpdateSettings={updateSettings}
-            onExitPortal={() => setRole('public')}
-            reducedMotion={reducedMotion}
-          />
+          {currentUser && currentUser.role === 'admin' ? (
+            <AdminPortal
+              admin={currentUser}
+              settings={settings}
+              onUpdateSettings={updateSettings}
+              onExitPortal={() => signOut()}
+              reducedMotion={reducedMotion}
+            />
+          ) : currentUser && currentUser.role !== 'admin' ? (
+            <PermissionDenied
+              requiredRoleName="Practice Administrators"
+              customMessage="Only verified practice administrators with an active administrative session have permission to access the Executive Admin Suite."
+              onReturnHome={() => navigateTo('/')}
+              onSwitchAccount={() => navigateTo('/login')}
+            />
+          ) : (
+            <NotAuthenticated
+              requiredPortalName="Executive Admin Suite"
+              onSignIn={() => navigateTo('/login')}
+              onReturnHome={() => navigateTo('/')}
+            />
+          )}
         </div>
       )}
-
-      {/* Demonstration Authentication Screen */}
-      <SignInModal
-        isOpen={isSignInOpen}
-        onClose={() => setIsSignInOpen(false)}
-        initialRoleChoice={signInRoleChoice}
-        onSuccess={(role: UserRole) => {
-          setRole(role);
-        }}
-      />
 
       {/* Fixed bottom-corner development-only role preview switcher */}
       <DevRolePreview

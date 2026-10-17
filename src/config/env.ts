@@ -29,7 +29,7 @@ const getEnvString = (value: string | undefined, defaultVal: string): string => 
 export const env: EnvironmentConfig = {
   isDev: import.meta.env.DEV,
   isProd: import.meta.env.PROD,
-  demoMode: getEnvBool(import.meta.env.VITE_DEMO_MODE, false),
+  demoMode: !import.meta.env.PROD && getEnvBool(import.meta.env.VITE_DEMO_MODE, false),
   appUrl: getEnvString(import.meta.env.APP_URL, 'https://purvaphalguni.com'),
   defaultCredentials: {
     adminEmail: getEnvString(import.meta.env.VITE_DEFAULT_ADMIN_EMAIL, 'director@purvaphalguni.com'),

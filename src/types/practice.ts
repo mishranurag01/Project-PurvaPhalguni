@@ -144,7 +144,9 @@ export interface UserProfile {
   // Authentication & Security (Cryptographically Hashed)
   passwordHash?: string;
   passwordSalt?: string;
+  passwordAlgorithm?: 'scrypt' | 'legacy_sha256';
   passwordLastChanged?: string;
+  migratedAt?: string;
 }
 
 export interface ServicePlan {
@@ -323,7 +325,9 @@ export interface AuditLogEntry {
     | 'AFFILIATE_REACTIVATED'
     | 'PAYOUT_DISBURSED'
     | 'BULLETIN_PUBLISHED'
-    | 'PASSWORD_CHANGED';
+    | 'PASSWORD_CHANGED'
+    | 'AUTH_MIGRATED'
+    | 'REGISTER';
   details: string;
   ipAddress: string;
   isSensitive: boolean;
